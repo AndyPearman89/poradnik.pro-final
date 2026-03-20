@@ -22,7 +22,9 @@
 - 2026-03-20: Po deployu uruchomiono runnee; test /track nadal zablokowany przez brak dostepnego lokalnego WordPress URL (exit code 2).
 - 2026-03-20: Stworzono docker-compose.yml (MySQL 8.0 + WordPress 6.5-php8.1 na porcie 8080) i .env.example; dodano retry/backoff (3 proby, 300ms backoff) do isReachable() w runnee i probe() w load-test-track; runbook rozszerzony o Scenariusz 0 (local dev stack).
 - 2026-03-20: Uruchomiono stos Docker (docker compose up -d), runnee wykryl WP na http://127.0.0.1:8080. Testy /track PASS (overall): Baseline 500 req OK=500 fail=0 RPS=17.22 p95=1128ms p99=3318ms; Peak 2000 req OK=2000 fail=0 RPS=17.43 p95=3226ms p99=4263ms. Raport: docs/implementation/reports/track-load-report-20260320-212259.md.
-- Kolejny krok: skonfigurowac temat jako aktywny w WP (wp-cli lub UI) i uruchomic testy integracyjne FE; rozwazyc GitHub Actions CI dla automatycznego load-testu na PR.
+- 2026-03-20: Dodano GitHub Actions workflow .github/workflows/track-load-test.yml dla automatycznego /track load-test na PR (docker compose + bootstrap WP przez wp-cli + aktywacja motywu + upload raportu).
+- 2026-03-20: Dodano bramke SLO w CI dla scenariusza Baseline (p95<=2000ms, p99<=5000ms) przez skrypt scripts/check-track-slo.mjs uruchamiany po suite runnerze.
+- Kolejny krok: uruchomic testy integracyjne FE po aktywacji motywu.
 
 ## Etap 1: Foundation (MVP techniczne)
 

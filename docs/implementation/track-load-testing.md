@@ -97,6 +97,30 @@ node scripts/runnee.mjs --base http://localhost:8080
 
 W tym kontenerze endpoint moze byc niedostepny, jesli lokalny WordPress nie jest uruchomiony. Skrypt zwroci wtedy blad "Endpoint unreachable" i kod wyjscia 2.
 
+## CI na Pull Request
+
+Dodano workflow GitHub Actions uruchamiany na PR:
+
+- .github/workflows/track-load-test.yml
+
+Workflow wykonuje:
+
+1. start docker compose,
+2. bootstrap WordPress przez wp-cli,
+3. aktywacje motywu poradnik.pro,
+4. uruchomienie suite runnera node scripts/runnee.mjs,
+5. walidacje bramki SLO dla Baseline (p95/p99),
+6. publikacje raportu jako artifact.
+
+Progi domyslne bramki SLO w CI:
+
+- Baseline p95 <= 2000 ms
+- Baseline p99 <= 5000 ms
+
+Skrypt walidacyjny:
+
+- scripts/check-track-slo.mjs
+
 ## Ostatni zweryfikowany wynik
 
 Run suite wykonany 2026-03-20 na lokalnym Docker WP:

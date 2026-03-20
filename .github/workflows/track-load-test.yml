@@ -1,0 +1,77 @@
+name: Track Load Test
+
+on:
+  pull_request:
+    paths:
+      - poradnik.pro/**
+      - scripts/**
+      - docker-compose.yml
+      - .github/workflows/track-load-test.yml
+  workflow_dispatch:
+
+jobs:
+  track-load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Prepare env
+        run: cp .env.example .env
+
+      - name: Start WordPress stack
+        run: docker compose up -d
+
+      - name: Wait for WordPress container
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 30); do
+            if docker compose ps --format json | grep -q '"Service":"wordpress"'; then
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Bootstrap WP core if needed
+        run: |
+          set -euo pipefail
+          docker compose --profile tools run --rm wpcli wp core is-installed --allow-root || \
+          docker compose --profile tools run --rm wpcli wp core install \
+            --url=http://localhost:8080 \
+            --title="Poradnik Pro CI" \
+            --admin_user=admin \
+            --admin_password=admin123! \
+            --admin_email=admin@example.com \
+            --skip-email \
+            --allow-root
+
+      - name: Activate theme
+        run: docker compose --profile tools run --rm wpcli wp theme activate poradnik.pro --allow-root
+
+      - name: Run load-test suite
+        run: node scripts/runnee.mjs --base http://127.0.0.1:8080
+
+      - name: Enforce baseline SLO gate
+        env:
+          TRACK_BASELINE_MAX_P95_MS: "2000"
+          TRACK_BASELINE_MAX_P99_MS: "5000"
+        run: node scripts/check-track-slo.mjs
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: track-load-reports
+          path: docs/implementation/reports/track-load-report-*.md
+          if-no-files-found: ignore
+
+      - name: Shutdown stack
+        if: always()
+        run: docker compose down -v
