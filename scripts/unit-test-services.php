@@ -698,6 +698,55 @@ function testAnalyticsServiceExportPayloadValidNonceContract(): void
     echo "✓ AnalyticsService::buildExportPayloadFromRequest valid nonce contract\n";
 }
 
+function testAnalyticsServiceExportPayloadDeniedWithoutManageOptions(): void
+{
+    global $mockCanManageOptions;
+    global $mockNonceVerification;
+
+    $mockCanManageOptions = false;
+    $mockNonceVerification = true;
+
+    $_GET = [
+        'poradnik_pro_export' => 'csv',
+        '_wpnonce' => 'valid',
+    ];
+
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildExportPayloadFromRequest');
+    $method->setAccessible(true);
+    $payload = $method->invoke(null);
+
+    assertSame(null, $payload, 'buildExportPayloadFromRequest should return null without manage_options capability');
+
+    $_GET = [];
+    $mockCanManageOptions = true;
+
+    echo "✓ AnalyticsService::buildExportPayloadFromRequest manage_options guard\n";
+}
+
+function testAnalyticsServiceExportPayloadRequiresCsvParam(): void
+{
+    global $mockCanManageOptions;
+    global $mockNonceVerification;
+
+    $mockCanManageOptions = true;
+    $mockNonceVerification = true;
+
+    $_GET = [
+        // missing poradnik_pro_export=csv
+        '_wpnonce' => 'valid',
+    ];
+
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildExportPayloadFromRequest');
+    $method->setAccessible(true);
+    $payload = $method->invoke(null);
+
+    assertSame(null, $payload, 'buildExportPayloadFromRequest should return null when export=csv parameter is missing');
+
+    $_GET = [];
+
+    echo "✓ AnalyticsService::buildExportPayloadFromRequest export param guard\n";
+}
+
 function testAnalyticsServiceExportCsvEmptyStoreHeaderOnly(): void
 {
     $method = new ReflectionMethod(AnalyticsService::class, 'buildExportCsv');
@@ -762,6 +811,8 @@ try {
     testAnalyticsServiceConfigRetentionClamp();
     testAnalyticsServiceExportNonceFlowInvalidNonceReturnsEarly();
     testAnalyticsServiceExportPayloadValidNonceContract();
+    testAnalyticsServiceExportPayloadDeniedWithoutManageOptions();
+    testAnalyticsServiceExportPayloadRequiresCsvParam();
     testAnalyticsServiceExportCsvEmptyStoreHeaderOnly();
     testAnalyticsServiceExportFilenameTimestampSmokeCheck();
 

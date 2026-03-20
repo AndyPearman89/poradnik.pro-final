@@ -35,7 +35,8 @@
 - 2026-03-20: Dodano testy regresyjne config form i export flow w scripts/unit-test-services.php: clamp retention_days do zakresu 14-365 oraz nonce-flow (invalid nonce => early return, bez outputu CSV).
 - 2026-03-20: Dodano testy scenariusza export request z poprawnym nonce (payload CSV + Content-Disposition) przez izolowany adapter I/O (buildExportPayloadFromRequest), bez użycia exit w testach.
 - 2026-03-20: Dodano regresyjne testy eksportu CSV dla pustego store (tylko header row) oraz smoke-check nazwy pliku z timestampem (Ymd-His).
-- Kolejny krok: dodać testy negatywne export request dla braku uprawnień manage_options i braku parametru poradnik_pro_export=csv.
+- 2026-03-20: Dodano testy negatywne export request dla braku uprawnień manage_options oraz braku parametru poradnik_pro_export=csv.
+- Kolejny krok: dodać testy kontraktu wartości eksportu (format 2 miejsc po przecinku dla revenue oraz fallback top_source=unknown/top_source_events=0).
 
 ## Etap 1: Foundation (MVP techniczne)
 
