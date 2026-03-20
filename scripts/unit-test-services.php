@@ -883,6 +883,21 @@ function testAnalyticsServiceBuildSummaryMultiDayAggregation(): void
     echo "✓ AnalyticsService::buildSummary multi-day aggregation contract\n";
 }
 
+function testAnalyticsServiceBuildSummaryEmptyInputFallback(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildSummary');
+    $method->setAccessible(true);
+
+    $summary = (array) $method->invoke(null, []);
+
+    assertSame(0, (int) ($summary['lead_success'] ?? -1), 'buildSummary should return lead_success=0 for empty input');
+    assertSame(0, (int) ($summary['affiliate_clicks'] ?? -1), 'buildSummary should return affiliate_clicks=0 for empty input');
+    assertSame(0.0, (float) ($summary['estimated_total_revenue'] ?? -1), 'buildSummary should return estimated_total_revenue=0.0 for empty input');
+    assertSame([], (array) ($summary['top_sources'] ?? ['unexpected']), 'buildSummary should return empty top_sources for empty input');
+
+    echo "✓ AnalyticsService::buildSummary empty-input fallback contract\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -905,6 +920,7 @@ try {
     testAnalyticsServiceExportFilenameTimestampSmokeCheck();
     testAnalyticsServiceExportCsvValueContract();
     testAnalyticsServiceBuildSummaryMultiDayAggregation();
+    testAnalyticsServiceBuildSummaryEmptyInputFallback();
 
     echo "\nOverall: PASS\n";
     exit(0);

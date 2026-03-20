@@ -38,7 +38,8 @@
 - 2026-03-20: Dodano testy negatywne export request dla braku uprawnień manage_options oraz braku parametru poradnik_pro_export=csv.
 - 2026-03-20: Dodano testy kontraktu wartości eksportu CSV: format revenue do 2 miejsc po przecinku oraz fallback top_source=unknown i top_source_events=0.
 - 2026-03-20: Dodano test kontraktu AnalyticsService::buildSummary dla wielodniowego store: agregacja lead_success, affiliate_clicks, estimated_total_revenue oraz top_sources (sumowanie i sortowanie malejące).
-- Kolejny krok: dodać test buildSummary dla pustego inputu (rows=[]), aby potwierdzić stabilny fallback 0 i puste top_sources.
+- 2026-03-20: Dodano test fallbacku AnalyticsService::buildSummary dla pustego inputu (rows=[]): lead_success=0, affiliate_clicks=0, estimated_total_revenue=0.0, top_sources=[].
+- Kolejny krok: dodać test top_sources limitu 10 w buildSummary (więcej niż 10 źródeł).
 
 ## Etap 1: Foundation (MVP techniczne)
 
