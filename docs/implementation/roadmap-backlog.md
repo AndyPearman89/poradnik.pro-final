@@ -31,7 +31,8 @@
 - 2026-03-20: Rozszerzono unit testy serwisów o revenue math w AnalyticsService::ingestEvent oraz edge-case błędu API w LeadService::submit.
 - 2026-03-20: Dodano asercje security contract dla endpointu /track w scripts/unit-test-services.php: weryfikacja permission_callback w registerRestRoutes oraz nagłówków bezpieczeństwa (Cache-Control, Pragma, X-Content-Type-Options, X-Frame-Options) w ingestEvent.
 - 2026-03-20: Dodano edge-case testy dla AnalyticsService w scripts/unit-test-services.php: retention_days=1 oraz odporność ingestEvent na niepoprawny payload (brak eventName/source).
-- Kolejny krok: dodać test kontraktu CSV export (nagłówki + kolumny + sortowanie dni) i uruchamiać go w tym samym runnerze.
+- 2026-03-20: Dodano test kontraktu CSV export w scripts/unit-test-services.php: nagłówki exportu, kolumny CSV i sortowanie dni rosnąco.
+- Kolejny krok: dodać testy regresyjne dla config form (retention clamp 14-365) oraz walidację nonce-flow dla export request.
 
 ## Etap 1: Foundation (MVP techniczne)
 

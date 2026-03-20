@@ -459,6 +459,82 @@ function testAnalyticsServiceSetsSecurityHeadersContract(): void
     echo "✓ AnalyticsService::ingestEvent security headers contract\n";
 }
 
+function testAnalyticsServiceExportHeadersContract(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildExportHeaders');
+    $method->setAccessible(true);
+
+    $headers = $method->invoke(null);
+
+    assertTrue(is_array($headers), 'buildExportHeaders should return array');
+    assertTrue(in_array('Content-Type: text/csv; charset=utf-8', $headers, true), 'CSV export headers should include content type');
+
+    $hasDisposition = false;
+    foreach ($headers as $headerLine) {
+        if (str_starts_with((string) $headerLine, 'Content-Disposition: attachment; filename="poradnik-kpi-export-')) {
+            $hasDisposition = true;
+            break;
+        }
+    }
+    assertTrue($hasDisposition, 'CSV export headers should include attachment filename');
+
+    echo "✓ AnalyticsService::buildExportHeaders contract\n";
+}
+
+function testAnalyticsServiceExportCsvColumnsAndSortOrder(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildExportCsv');
+    $method->setAccessible(true);
+
+    $store = [
+        '2026-03-20' => [
+            'events' => ['a' => 2, 'b' => 1],
+            'sources' => ['affiliate' => 3, 'organic' => 1],
+            'revenue' => [
+                'lead_success' => 1,
+                'affiliate_clicks' => 2,
+                'estimated_lead_revenue' => 30.0,
+                'estimated_affiliate_revenue' => 5.0,
+            ],
+        ],
+        '2026-03-18' => [
+            'events' => ['x' => 1],
+            'sources' => ['organic' => 1],
+            'revenue' => [
+                'lead_success' => 0,
+                'affiliate_clicks' => 0,
+                'estimated_lead_revenue' => 0.0,
+                'estimated_affiliate_revenue' => 0.0,
+            ],
+        ],
+    ];
+
+    $csv = (string) $method->invoke(null, $store);
+    $lines = preg_split('/\r?\n/', trim($csv)) ?: [];
+
+    assertTrue(count($lines) >= 3, 'CSV export should contain header and at least two data rows');
+
+    $header = str_getcsv($lines[0]);
+    assertSame([
+        'day',
+        'lead_success',
+        'affiliate_clicks',
+        'estimated_lead_revenue',
+        'estimated_affiliate_revenue',
+        'total_events',
+        'top_source',
+        'top_source_events',
+    ], $header, 'CSV export should contain expected columns in order');
+
+    $firstData = str_getcsv($lines[1]);
+    $secondData = str_getcsv($lines[2]);
+
+    assertSame('2026-03-18', $firstData[0] ?? null, 'CSV export should sort rows ascending by day');
+    assertSame('2026-03-20', $secondData[0] ?? null, 'CSV export should sort rows ascending by day');
+
+    echo "✓ AnalyticsService::buildExportCsv columns and day sort contract\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -470,6 +546,8 @@ try {
     testAnalyticsServiceIngestEventHandlesInvalidPayload();
     testAnalyticsServiceRegistersPermissionCallback();
     testAnalyticsServiceSetsSecurityHeadersContract();
+    testAnalyticsServiceExportHeadersContract();
+    testAnalyticsServiceExportCsvColumnsAndSortOrder();
 
     echo "\nOverall: PASS\n";
     exit(0);

@@ -12,6 +12,16 @@ final class AnalyticsService
     private const OPTION_KEY = 'poradnik_pro_kpi_store';
     private const OPTION_CONFIG_KEY = 'poradnik_pro_kpi_config';
     private const DEFAULT_RETENTION_DAYS = 90;
+    private const EXPORT_COLUMNS = [
+        'day',
+        'lead_success',
+        'affiliate_clicks',
+        'estimated_lead_revenue',
+        'estimated_affiliate_revenue',
+        'total_events',
+        'top_source',
+        'top_source_events',
+    ];
 
     public static function registerRestRoutes(): void
     {
@@ -250,27 +260,34 @@ final class AnalyticsService
         }
 
         $store = (array) get_option(self::OPTION_KEY, []);
-        ksort($store);
 
         nocache_headers();
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="poradnik-kpi-export-' . gmdate('Ymd-His') . '.csv"');
-
-        $output = fopen('php://output', 'w');
-        if ($output === false) {
-            exit;
+        foreach (self::buildExportHeaders() as $headerLine) {
+            header($headerLine);
         }
 
-        fputcsv($output, [
-            'day',
-            'lead_success',
-            'affiliate_clicks',
-            'estimated_lead_revenue',
-            'estimated_affiliate_revenue',
-            'total_events',
-            'top_source',
-            'top_source_events',
-        ]);
+        echo self::buildExportCsv($store);
+        exit;
+    }
+
+    private static function buildExportHeaders(): array
+    {
+        return [
+            'Content-Type: text/csv; charset=utf-8',
+            'Content-Disposition: attachment; filename="poradnik-kpi-export-' . gmdate('Ymd-His') . '.csv"',
+        ];
+    }
+
+    private static function buildExportCsv(array $store): string
+    {
+        ksort($store);
+
+        $output = fopen('php://temp', 'w+');
+        if ($output === false) {
+            return '';
+        }
+
+        fputcsv($output, self::EXPORT_COLUMNS);
 
         foreach ($store as $day => $data) {
             $revenue = (array) ($data['revenue'] ?? []);
@@ -294,8 +311,11 @@ final class AnalyticsService
             ]);
         }
 
+        rewind($output);
+        $csv = stream_get_contents($output);
         fclose($output);
-        exit;
+
+        return $csv === false ? '' : $csv;
     }
 
     private static function pruneStore(array $store, int $retentionDays): array
