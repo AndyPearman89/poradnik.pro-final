@@ -559,6 +559,42 @@ function testAnalyticsServiceExportCsvColumnsAndSortOrder(): void
     echo "✓ AnalyticsService::buildExportCsv columns and day sort contract\n";
 }
 
+function testAnalyticsServiceExportCsvValueContract(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildExportCsv');
+    $method->setAccessible(true);
+
+    $store = [
+        '2026-03-21' => [
+            'events' => ['a' => 2, 'b' => 3],
+            'sources' => [],
+            'revenue' => [
+                'lead_success' => 1,
+                'affiliate_clicks' => 2,
+                'estimated_lead_revenue' => 1.2,
+                'estimated_affiliate_revenue' => 3,
+            ],
+        ],
+    ];
+
+    $csv = (string) $method->invoke(null, $store);
+    $lines = preg_split('/\r?\n/', trim($csv)) ?: [];
+    assertTrue(count($lines) >= 2, 'CSV value contract should include at least one data row');
+
+    $row = str_getcsv($lines[1]);
+
+    assertSame('2026-03-21', $row[0] ?? null, 'CSV row should contain correct day');
+    assertSame('1', $row[1] ?? null, 'CSV row should contain lead_success');
+    assertSame('2', $row[2] ?? null, 'CSV row should contain affiliate_clicks');
+    assertSame('1.20', $row[3] ?? null, 'CSV lead revenue should be formatted to two decimals');
+    assertSame('3.00', $row[4] ?? null, 'CSV affiliate revenue should be formatted to two decimals');
+    assertSame('5', $row[5] ?? null, 'CSV total_events should be sum of events');
+    assertSame('unknown', $row[6] ?? null, 'CSV top_source should fallback to unknown when sources are empty');
+    assertSame('0', $row[7] ?? null, 'CSV top_source_events should fallback to 0 when sources are empty');
+
+    echo "✓ AnalyticsService::buildExportCsv value contract\n";
+}
+
 function testAnalyticsServiceConfigRetentionClamp(): void
 {
     global $mockCanManageOptions;
@@ -815,6 +851,7 @@ try {
     testAnalyticsServiceExportPayloadRequiresCsvParam();
     testAnalyticsServiceExportCsvEmptyStoreHeaderOnly();
     testAnalyticsServiceExportFilenameTimestampSmokeCheck();
+    testAnalyticsServiceExportCsvValueContract();
 
     echo "\nOverall: PASS\n";
     exit(0);

@@ -36,7 +36,8 @@
 - 2026-03-20: Dodano testy scenariusza export request z poprawnym nonce (payload CSV + Content-Disposition) przez izolowany adapter I/O (buildExportPayloadFromRequest), bez użycia exit w testach.
 - 2026-03-20: Dodano regresyjne testy eksportu CSV dla pustego store (tylko header row) oraz smoke-check nazwy pliku z timestampem (Ymd-His).
 - 2026-03-20: Dodano testy negatywne export request dla braku uprawnień manage_options oraz braku parametru poradnik_pro_export=csv.
-- Kolejny krok: dodać testy kontraktu wartości eksportu (format 2 miejsc po przecinku dla revenue oraz fallback top_source=unknown/top_source_events=0).
+- 2026-03-20: Dodano testy kontraktu wartości eksportu CSV: format revenue do 2 miejsc po przecinku oraz fallback top_source=unknown i top_source_events=0.
+- Kolejny krok: dodać testy sumaryczne buildSummary (lead_success, affiliate_clicks, estimated_total_revenue i top_sources) dla wielodniowego store.
 
 ## Etap 1: Foundation (MVP techniczne)
 
