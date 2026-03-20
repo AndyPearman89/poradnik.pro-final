@@ -29,6 +29,7 @@ services:
     volumes:
       - wp_data:/var/www/html
       - ./poradnik.pro:/var/www/html/wp-content/themes/poradnik.pro:ro
+      - ./plugins/peartree-local-module:/var/www/html/wp-content/plugins/peartree-local-module:ro
     depends_on:
       mysql:
         condition: service_healthy
@@ -44,6 +45,7 @@ services:
     volumes:
       - wp_data:/var/www/html
       - ./poradnik.pro:/var/www/html/wp-content/themes/poradnik.pro:ro
+      - ./plugins/peartree-local-module:/var/www/html/wp-content/plugins/peartree-local-module:ro
     depends_on:
       mysql:
         condition: service_healthy
