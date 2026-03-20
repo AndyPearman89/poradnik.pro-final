@@ -27,7 +27,8 @@
 - 2026-03-20: Dodano smoke test FE scripts/smoke-test-fe.mjs: waliduje stronę główną (status 200, znaczniki HTML), tracking endpoint i integrację między FE a /track endpoint. Uruchamiany w CI po aktywacji motywu i przed load testem.
 - 2026-03-20: Dodano bezpieczeństwo endpointu /track: proper permission callback, security headers (Cache-Control, X-Content-Type-Options, X-Frame-Options), rate limiting stub (const RATE_LIMIT_REQUESTS_PER_MIN=300), audit logging w WP_DEBUG mode, sanitizacja Input. Dokumentacja: docs/implementation/security-rate-limiting.md.
 - 2026-03-20: Dodano integracyjny test lead form scripts/integration-test-lead-form.mjs (lead_form_displayed, lead_form_submit_attempt, lead_submit_success) i podpięto go w CI po smoke teście FE.
-- Kolejny krok: dodać testy unitowe dla AnalyticsService.php (pruneStore, revenue math) i LeadService.php (walidacja payload), a następnie spiąć je w CI.
+- 2026-03-20: Dodano unit testy serwisów w scripts/unit-test-services.php: AnalyticsService::pruneStore (retention logic) oraz LeadService::submit (sanitizacja payload i honeypot short-circuit). Testy podpięte w CI.
+- Kolejny krok: rozszerzyć coverage testów o revenue math w AnalyticsService::ingestEvent oraz edge-case'y błędów API w LeadService.
 
 ## Etap 1: Foundation (MVP techniczne)
 

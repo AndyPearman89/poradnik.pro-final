@@ -61,6 +61,9 @@ jobs:
       - name: Run lead form integration test
         run: node scripts/integration-test-lead-form.mjs --base http://127.0.0.1:8080
 
+      - name: Run service unit tests (PHP)
+        run: php scripts/unit-test-services.php
+
       - name: Run load-test suite
         run: node scripts/runnee.mjs --base http://127.0.0.1:8080
 
