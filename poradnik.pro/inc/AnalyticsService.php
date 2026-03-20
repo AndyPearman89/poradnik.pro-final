@@ -37,6 +37,12 @@ final class AnalyticsService
 
     public static function ingestEvent(WP_REST_Request $request): WP_REST_Response
     {
+        // Set security headers to prevent caching and XSS
+        header('Cache-Control: no-store, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: DENY');
+
         $payload = (array) $request->get_json_params();
         $eventName = sanitize_key((string) ($payload['eventName'] ?? 'unknown'));
         $eventData = (array) ($payload['payload'] ?? []);
@@ -76,7 +82,13 @@ final class AnalyticsService
 
         update_option(self::OPTION_KEY, $store, false);
 
+        // Audit logging when WP_DEBUG is enabled
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log(sprintf('[Analytics] event=%s source=%s', $eventName, $source));
+        }
+
         return new WP_REST_Response([
+            'success' => true,
             'ok' => true,
             'event' => $eventName,
         ], 202);
