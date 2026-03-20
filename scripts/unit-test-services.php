@@ -16,6 +16,8 @@ $capturedRemotePost = null;
 $mockRemotePostResponse = null;
 $mockOptions = [];
 $capturedRestRouteRegistration = null;
+$mockCanManageOptions = true;
+$mockNonceVerification = true;
 
 if (! function_exists('__')) {
     function __(string $text, string $domain = ''): string
@@ -95,6 +97,28 @@ if (! function_exists('wp_create_nonce')) {
     function wp_create_nonce(string $action): string
     {
         return 'test-nonce';
+    }
+}
+
+if (! function_exists('current_user_can')) {
+    function current_user_can(string $capability): bool
+    {
+        global $mockCanManageOptions;
+        return (bool) $mockCanManageOptions;
+    }
+}
+
+if (! function_exists('wp_verify_nonce')) {
+    function wp_verify_nonce(string $nonce, string $action): bool
+    {
+        global $mockNonceVerification;
+        return (bool) $mockNonceVerification;
+    }
+}
+
+if (! function_exists('nocache_headers')) {
+    function nocache_headers(): void
+    {
     }
 }
 
@@ -535,6 +559,77 @@ function testAnalyticsServiceExportCsvColumnsAndSortOrder(): void
     echo "✓ AnalyticsService::buildExportCsv columns and day sort contract\n";
 }
 
+function testAnalyticsServiceConfigRetentionClamp(): void
+{
+    global $mockCanManageOptions;
+    global $mockNonceVerification;
+    global $mockOptions;
+
+    $mockCanManageOptions = true;
+    $mockNonceVerification = true;
+    $mockOptions = [];
+
+    $method = new ReflectionMethod(AnalyticsService::class, 'handleConfigPost');
+    $method->setAccessible(true);
+
+    $_POST = [
+        'poradnik_pro_kpi_save' => '1',
+        'poradnik_pro_kpi_nonce' => 'ok',
+        'affiliate_value_per_click' => '1.5',
+        'lead_value_per_success' => '25',
+        'retention_days' => '1',
+    ];
+    $method->invoke(null);
+
+    $cfg = $mockOptions['poradnik_pro_kpi_config'] ?? [];
+    assertSame(14, (int) ($cfg['retention_days'] ?? 0), 'retention_days should clamp to minimum 14');
+
+    $_POST['retention_days'] = '999';
+    $method->invoke(null);
+
+    $cfg = $mockOptions['poradnik_pro_kpi_config'] ?? [];
+    assertSame(365, (int) ($cfg['retention_days'] ?? 0), 'retention_days should clamp to maximum 365');
+
+    $_POST = [];
+
+    echo "✓ AnalyticsService::handleConfigPost retention clamp regression\n";
+}
+
+function testAnalyticsServiceExportNonceFlowInvalidNonceReturnsEarly(): void
+{
+    global $mockCanManageOptions;
+    global $mockNonceVerification;
+
+    $mockCanManageOptions = true;
+    $mockNonceVerification = false;
+
+    $method = new ReflectionMethod(AnalyticsService::class, 'handleExportRequest');
+    $method->setAccessible(true);
+
+    $_GET = [
+        'poradnik_pro_export' => 'csv',
+        '_wpnonce' => 'invalid',
+    ];
+
+    $beforeHeaders = function_exists('xdebug_get_headers') ? xdebug_get_headers() : [];
+    $beforeLen = strlen((string) ob_get_contents());
+
+    $method->invoke(null);
+
+    $afterLen = strlen((string) ob_get_contents());
+    assertSame($beforeLen, $afterLen, 'invalid export nonce should not output CSV payload');
+
+    if (function_exists('xdebug_get_headers')) {
+        $afterHeaders = xdebug_get_headers();
+        assertSame(count($beforeHeaders), count($afterHeaders), 'invalid export nonce should not add response headers');
+    }
+
+    $_GET = [];
+    $mockNonceVerification = true;
+
+    echo "✓ AnalyticsService::handleExportRequest nonce-flow regression\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -548,6 +643,8 @@ try {
     testAnalyticsServiceSetsSecurityHeadersContract();
     testAnalyticsServiceExportHeadersContract();
     testAnalyticsServiceExportCsvColumnsAndSortOrder();
+    testAnalyticsServiceConfigRetentionClamp();
+    testAnalyticsServiceExportNonceFlowInvalidNonceReturnsEarly();
 
     echo "\nOverall: PASS\n";
     exit(0);
