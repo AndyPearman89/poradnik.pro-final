@@ -20,6 +20,8 @@ final class PearTreeLocalModule
     public static function bootstrap(): void
     {
         add_action('rest_api_init', [PearTreeLocalModuleApi::class, 'registerRoutes']);
+        add_action('admin_menu', [PearTreeLocalModuleApi::class, 'registerAdminPage']);
+        add_action('admin_post_peartree_local_module_export_leads', [PearTreeLocalModuleApi::class, 'exportLeadsCsv']);
         add_shortcode('peartree_local_module', [PearTreeLocalModuleUi::class, 'renderShortcode']);
     }
 
