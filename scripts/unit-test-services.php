@@ -698,6 +698,54 @@ function testAnalyticsServiceExportPayloadValidNonceContract(): void
     echo "✓ AnalyticsService::buildExportPayloadFromRequest valid nonce contract\n";
 }
 
+function testAnalyticsServiceExportCsvEmptyStoreHeaderOnly(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildExportCsv');
+    $method->setAccessible(true);
+
+    $csv = (string) $method->invoke(null, []);
+    $lines = preg_split('/\r?\n/', trim($csv)) ?: [];
+
+    assertSame(1, count($lines), 'empty store export should contain only header row');
+
+    $header = str_getcsv($lines[0]);
+    assertSame([
+        'day',
+        'lead_success',
+        'affiliate_clicks',
+        'estimated_lead_revenue',
+        'estimated_affiliate_revenue',
+        'total_events',
+        'top_source',
+        'top_source_events',
+    ], $header, 'empty store export should keep expected header columns');
+
+    echo "✓ AnalyticsService::buildExportCsv empty store header-only contract\n";
+}
+
+function testAnalyticsServiceExportFilenameTimestampSmokeCheck(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildExportHeaders');
+    $method->setAccessible(true);
+
+    $headers = (array) $method->invoke(null);
+    $disposition = '';
+
+    foreach ($headers as $headerLine) {
+        $line = (string) $headerLine;
+        if (str_starts_with($line, 'Content-Disposition:')) {
+            $disposition = $line;
+            break;
+        }
+    }
+
+    assertTrue($disposition !== '', 'export headers should include Content-Disposition');
+    $matches = preg_match('/filename="poradnik-kpi-export-\d{8}-\d{6}\.csv"$/', $disposition) === 1;
+    assertTrue($matches, 'export filename should include timestamp format Ymd-His');
+
+    echo "✓ AnalyticsService::buildExportHeaders filename timestamp smoke-check\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -714,6 +762,8 @@ try {
     testAnalyticsServiceConfigRetentionClamp();
     testAnalyticsServiceExportNonceFlowInvalidNonceReturnsEarly();
     testAnalyticsServiceExportPayloadValidNonceContract();
+    testAnalyticsServiceExportCsvEmptyStoreHeaderOnly();
+    testAnalyticsServiceExportFilenameTimestampSmokeCheck();
 
     echo "\nOverall: PASS\n";
     exit(0);
