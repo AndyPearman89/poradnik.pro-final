@@ -40,7 +40,8 @@
 - 2026-03-20: Dodano test kontraktu AnalyticsService::buildSummary dla wielodniowego store: agregacja lead_success, affiliate_clicks, estimated_total_revenue oraz top_sources (sumowanie i sortowanie malejące).
 - 2026-03-20: Dodano test fallbacku AnalyticsService::buildSummary dla pustego inputu (rows=[]): lead_success=0, affiliate_clicks=0, estimated_total_revenue=0.0, top_sources=[].
 - 2026-03-20: Dodano test limitu top_sources w AnalyticsService::buildSummary: przy 12 źródłach zwracane jest dokładnie 10 najwyższych (malejąco, do pozycji 10).
-- Kolejny krok: dodać test stabilności buildSummary dla brakującego klucza revenue/sources w pojedynczym dniu (defensywny fallback).
+- 2026-03-20: Dodano test stabilności AnalyticsService::buildSummary dla brakujących kluczy revenue/sources w jednym dniu (defensywny fallback bez crasha i poprawna agregacja danych dostępnych).
+- Kolejny krok: dodać test stabilności buildSummary dla niepoprawnych typów w sources (np. string/null) i wymusić bezpieczną normalizację do int.
 
 ## Etap 1: Foundation (MVP techniczne)
 

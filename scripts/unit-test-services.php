@@ -936,6 +936,39 @@ function testAnalyticsServiceBuildSummaryTopSourcesLimit(): void
     echo "✓ AnalyticsService::buildSummary top_sources limit contract\n";
 }
 
+function testAnalyticsServiceBuildSummaryMissingKeysFallback(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildSummary');
+    $method->setAccessible(true);
+
+    $rows = [
+        '2026-03-23' => [
+            // Missing revenue and sources on purpose to verify defensive defaults.
+            'events' => ['x' => 1],
+        ],
+        '2026-03-22' => [
+            'revenue' => [
+                'lead_success' => 2,
+                'affiliate_clicks' => 1,
+                'estimated_lead_revenue' => 50.0,
+                'estimated_affiliate_revenue' => 2.0,
+            ],
+            'sources' => [
+                'organic' => 3,
+            ],
+        ],
+    ];
+
+    $summary = (array) $method->invoke(null, $rows);
+
+    assertSame(2, (int) ($summary['lead_success'] ?? -1), 'buildSummary should fallback missing revenue keys to zero and aggregate valid rows');
+    assertSame(1, (int) ($summary['affiliate_clicks'] ?? -1), 'buildSummary should keep valid affiliate_clicks when one row has missing keys');
+    assertSame(52.0, (float) ($summary['estimated_total_revenue'] ?? -1), 'buildSummary should calculate revenue using available row data only');
+    assertSame(['organic' => 3], (array) ($summary['top_sources'] ?? []), 'buildSummary should fallback missing sources to empty array without crashing');
+
+    echo "✓ AnalyticsService::buildSummary missing-keys fallback contract\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -960,6 +993,7 @@ try {
     testAnalyticsServiceBuildSummaryMultiDayAggregation();
     testAnalyticsServiceBuildSummaryEmptyInputFallback();
     testAnalyticsServiceBuildSummaryTopSourcesLimit();
+    testAnalyticsServiceBuildSummaryMissingKeysFallback();
 
     echo "\nOverall: PASS\n";
     exit(0);
