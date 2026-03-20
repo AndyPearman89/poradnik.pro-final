@@ -1,0 +1,17 @@
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-bg: #0d1417;
+        --color-text: #f2f8f8;
+        --color-surface: #132026;
+        --color-muted: #b4c7cc;
+    }
+
+    body {
+        background: radial-gradient(circle at 20% 10%, #24323a 0%, #0d1417 55%, #071013 100%);
+    }
+
+    .pp-hero__body,
+    .pp-card {
+        background: #132026;
+    }
+}

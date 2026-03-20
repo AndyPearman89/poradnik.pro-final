@@ -1,5 +1,18 @@
 # Roadmap i Backlog Wdrozenia
 
+## Status wdrozenia
+
+- 2026-03-20: Etap 1 (Foundation MVP techniczne) uruchomiony jako kod w katalogu poradnik.pro.
+- Zrealizowano: scaffold motywu, tokeny CSS, template parts home, front-page, warstwa API i serwisy (Search/Lead/SEO/Schema/UI/Performance), JS bez jQuery.
+- 2026-03-20: Etap 2 (Conversion Core) uruchomiony w wersji bazowej: retry+backoff i walidacja lead form, tracking payload contract, CTA injection logic, trust/urgency components.
+- 2026-03-20: Etap 3 (SEO Scale) uruchomiony w wersji bazowej: rozszerzone meta i schema zalezne od intentu, finalizacja template Q&A oraz local archive, automatyczny blok internal linking.
+- 2026-03-20: Etap 4 (Monetization Optimization) uruchomiony w wersji bazowej: ranking premium weighting, comparison table, affiliate CTA system z disclosure i fallback lead CTA.
+- 2026-03-20: Etap 5 (Growth i AI) uruchomiony w wersji bazowej: intent-aware search mapping, prompt pipeline dla content+FAQ, A/B variant dla sekcji CTA.
+- 2026-03-20: Etap 6 (Marketing Distribution) uruchomiony w wersji bazowej: deep-link templates dla YouTube Shorts/Pinterest/Discover oraz tracking attribution landing i channel click.
+- 2026-03-20: Hardening produkcyjny uruchomiony w wersji bazowej: dashboard KPI w WP Admin i automatyczne raportowanie eventow attribution -> monetization przez endpoint /track.
+- 2026-03-20: Kalibracja estymacji revenue uruchomiona: konfigurowalne stawki affiliate/lead w dashboardzie KPI + podsumowanie 14 dni i top sources.
+- Kolejny krok: testy obciazeniowe endpointu /track i retencja danych (rolling window + export CSV).
+
 ## Etap 1: Foundation (MVP techniczne)
 
 Cele:

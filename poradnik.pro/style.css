@@ -1,0 +1,18 @@
+/*
+Theme Name: poradnik.pro
+Theme URI: https://poradnik.pro
+Author: poradnik.pro
+Description: Lightweight conversion-first theme for Poradnik.pro.
+Version: 0.1.0
+Requires at least: 6.0
+Tested up to: 6.5
+Requires PHP: 8.1
+Text Domain: poradnik-pro
+*/
+
+@import url('./assets/css/variables.css');
+@import url('./assets/css/base.css');
+@import url('./assets/css/layout.css');
+@import url('./assets/css/components.css');
+@import url('./assets/css/utilities.css');
+@import url('./assets/css/dark.css');

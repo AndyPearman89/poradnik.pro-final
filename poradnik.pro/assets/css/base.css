@@ -1,0 +1,54 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: radial-gradient(circle at 10% 10%, #fff5d9 0%, var(--color-bg) 45%, #edf4f5 100%);
+    color: var(--color-text);
+    font-family: "Source Sans 3", "Segoe UI", sans-serif;
+    font-size: var(--text-md);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-family: "Fraunces", Georgia, serif;
+    line-height: 1.2;
+    margin: 0 0 var(--space-4);
+}
+
+p {
+    margin: 0 0 var(--space-4);
+}
+
+a {
+    color: var(--color-secondary);
+    text-decoration: none;
+}
+
+a:hover,
+a:focus-visible {
+    text-decoration: underline;
+}
+
+img {
+    display: block;
+    height: auto;
+    max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+    font: inherit;
+}
