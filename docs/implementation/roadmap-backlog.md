@@ -24,7 +24,8 @@
 - 2026-03-20: Uruchomiono stos Docker (docker compose up -d), runnee wykryl WP na http://127.0.0.1:8080. Testy /track PASS (overall): Baseline 500 req OK=500 fail=0 RPS=17.22 p95=1128ms p99=3318ms; Peak 2000 req OK=2000 fail=0 RPS=17.43 p95=3226ms p99=4263ms. Raport: docs/implementation/reports/track-load-report-20260320-212259.md.
 - 2026-03-20: Dodano GitHub Actions workflow .github/workflows/track-load-test.yml dla automatycznego /track load-test na PR (docker compose + bootstrap WP przez wp-cli + aktywacja motywu + upload raportu).
 - 2026-03-20: Dodano bramke SLO w CI dla scenariusza Baseline (p95<=2000ms, p99<=5000ms) przez skrypt scripts/check-track-slo.mjs uruchamiany po suite runnerze.
-- Kolejny krok: uruchomic testy integracyjne FE po aktywacji motywu.
+- 2026-03-20: Dodano smoke test FE scripts/smoke-test-fe.mjs: waliduje stronę główną (status 200, znaczniki HTML), tracking endpoint i integrację między FE a /track endpoint. Uruchamiany w CI po aktywacji motywu i przed load testem.
+- Kolejny krok: dodać testy komponentów (hero, CTA, trust block) i automatyczną walidację A/B variant dla CTA sekcji w smoke teście.
 
 ## Etap 1: Foundation (MVP techniczne)
 
