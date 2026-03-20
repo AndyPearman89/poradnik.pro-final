@@ -11,7 +11,18 @@
 - 2026-03-20: Etap 6 (Marketing Distribution) uruchomiony w wersji bazowej: deep-link templates dla YouTube Shorts/Pinterest/Discover oraz tracking attribution landing i channel click.
 - 2026-03-20: Hardening produkcyjny uruchomiony w wersji bazowej: dashboard KPI w WP Admin i automatyczne raportowanie eventow attribution -> monetization przez endpoint /track.
 - 2026-03-20: Kalibracja estymacji revenue uruchomiona: konfigurowalne stawki affiliate/lead w dashboardzie KPI + podsumowanie 14 dni i top sources.
-- Kolejny krok: testy obciazeniowe endpointu /track i retencja danych (rolling window + export CSV).
+- 2026-03-20: Retencja danych telemetryki uruchomiona: rolling window (14-365 dni) i eksport CSV z dashboardu KPI.
+- 2026-03-20: Dodano skrypt testow obciazeniowych endpointu /track (Node, bez zaleznosci) i dokumentacje uruchomienia.
+- 2026-03-20: Dodano suite runner testow /track (baseline + peak) z automatycznym raportem markdown.
+- 2026-03-20: Wykonano probe suite runnera; raport wygenerowany, ale test zablokowany przez niedostepny endpoint WP w kontenerze (Endpoint unreachable).
+- 2026-03-20: Dodano runnee (autonomiczny entrypoint) z autodetekcja base URL i delegacja do suite runnera.
+- 2026-03-20: Dodano automatyzacje deploymentu motywu (local/ssh, dry-run, backup) + runbook wdrozeniowy.
+- 2026-03-20: Wykonano realny lokalny deploy testowy motywu do /tmp/wp-content/themes/poradnik.pro (walidacja artefaktow OK).
+- 2026-03-20: Wykonano lokalny deploy z backupem (backup utworzony, deployment complete, katalog motywu aktywny w target testowym).
+- 2026-03-20: Po deployu uruchomiono runnee; test /track nadal zablokowany przez brak dostepnego lokalnego WordPress URL (exit code 2).
+- 2026-03-20: Stworzono docker-compose.yml (MySQL 8.0 + WordPress 6.5-php8.1 na porcie 8080) i .env.example; dodano retry/backoff (3 proby, 300ms backoff) do isReachable() w runnee i probe() w load-test-track; runbook rozszerzony o Scenariusz 0 (local dev stack).
+- 2026-03-20: Uruchomiono stos Docker (docker compose up -d), runnee wykryl WP na http://127.0.0.1:8080. Testy /track PASS (overall): Baseline 500 req OK=500 fail=0 RPS=17.22 p95=1128ms p99=3318ms; Peak 2000 req OK=2000 fail=0 RPS=17.43 p95=3226ms p99=4263ms. Raport: docs/implementation/reports/track-load-report-20260320-212259.md.
+- Kolejny krok: skonfigurowac temat jako aktywny w WP (wp-cli lub UI) i uruchomic testy integracyjne FE; rozwazyc GitHub Actions CI dla automatycznego load-testu na PR.
 
 ## Etap 1: Foundation (MVP techniczne)
 

@@ -11,6 +11,7 @@ final class AnalyticsService
 {
     private const OPTION_KEY = 'poradnik_pro_kpi_store';
     private const OPTION_CONFIG_KEY = 'poradnik_pro_kpi_config';
+    private const DEFAULT_RETENTION_DAYS = 90;
 
     public static function registerRestRoutes(): void
     {
@@ -71,6 +72,8 @@ final class AnalyticsService
             $store[$day]['revenue']['estimated_lead_revenue'] += (float) $config['lead_value_per_success'];
         }
 
+        $store = self::pruneStore($store, (int) $config['retention_days']);
+
         update_option(self::OPTION_KEY, $store, false);
 
         return new WP_REST_Response([
@@ -82,6 +85,7 @@ final class AnalyticsService
     public static function renderAdminPage(): void
     {
         self::handleConfigPost();
+        self::handleExportRequest();
 
         $config = self::config();
         $store = (array) get_option(self::OPTION_KEY, []);
@@ -106,9 +110,17 @@ final class AnalyticsService
         echo '<th scope="row"><label for="lead_value_per_success">' . esc_html__('Lead PLN / success', 'poradnik-pro') . '</label></th>';
         echo '<td><input name="lead_value_per_success" id="lead_value_per_success" type="number" min="0" step="0.01" value="' . esc_attr((string) $config['lead_value_per_success']) . '"></td>';
         echo '</tr>';
+        echo '<tr>';
+        echo '<th scope="row"><label for="retention_days">' . esc_html__('Retencja danych (dni)', 'poradnik-pro') . '</label></th>';
+        echo '<td><input name="retention_days" id="retention_days" type="number" min="14" max="365" step="1" value="' . esc_attr((string) $config['retention_days']) . '">';
+        echo '<p class="description">' . esc_html__('Starsze rekordy sa automatycznie usuwane przy ingest eventow.', 'poradnik-pro') . '</p></td>';
+        echo '</tr>';
         echo '</tbody></table>';
         submit_button(__('Zapisz kalibracje', 'poradnik-pro'), 'primary', 'poradnik_pro_kpi_save');
         echo '</form>';
+
+        $exportUrl = wp_nonce_url(admin_url('admin.php?page=poradnik-pro-kpi&poradnik_pro_export=csv'), 'poradnik_pro_kpi_export');
+        echo '<p><a class="button button-secondary" href="' . esc_url($exportUrl) . '">' . esc_html__('Eksportuj CSV', 'poradnik-pro') . '</a></p>';
 
         echo '<h2>' . esc_html__('Podsumowanie 14 dni', 'poradnik-pro') . '</h2>';
         echo '<p>' . esc_html__('Lead success: ', 'poradnik-pro') . esc_html((string) $summary['lead_success']) . ' | ';
@@ -174,6 +186,7 @@ final class AnalyticsService
         return [
             'affiliate_value_per_click' => (float) ($config['affiliate_value_per_click'] ?? 1.5),
             'lead_value_per_success' => (float) ($config['lead_value_per_success'] ?? 25.0),
+            'retention_days' => max(14, min(365, (int) ($config['retention_days'] ?? self::DEFAULT_RETENTION_DAYS))),
         ];
     }
 
@@ -194,11 +207,99 @@ final class AnalyticsService
 
         $affiliate = isset($_POST['affiliate_value_per_click']) ? (float) $_POST['affiliate_value_per_click'] : 1.5;
         $lead = isset($_POST['lead_value_per_success']) ? (float) $_POST['lead_value_per_success'] : 25.0;
+        $retentionDays = isset($_POST['retention_days']) ? (int) $_POST['retention_days'] : self::DEFAULT_RETENTION_DAYS;
 
         update_option(self::OPTION_CONFIG_KEY, [
             'affiliate_value_per_click' => max(0, $affiliate),
             'lead_value_per_success' => max(0, $lead),
+            'retention_days' => max(14, min(365, $retentionDays)),
         ], false);
+    }
+
+    private static function handleExportRequest(): void
+    {
+        if (! current_user_can('manage_options')) {
+            return;
+        }
+
+        $export = sanitize_key((string) ($_GET['poradnik_pro_export'] ?? ''));
+        if ($export !== 'csv') {
+            return;
+        }
+
+        $nonce = sanitize_text_field((string) ($_GET['_wpnonce'] ?? ''));
+        if (! wp_verify_nonce($nonce, 'poradnik_pro_kpi_export')) {
+            return;
+        }
+
+        $store = (array) get_option(self::OPTION_KEY, []);
+        ksort($store);
+
+        nocache_headers();
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="poradnik-kpi-export-' . gmdate('Ymd-His') . '.csv"');
+
+        $output = fopen('php://output', 'w');
+        if ($output === false) {
+            exit;
+        }
+
+        fputcsv($output, [
+            'day',
+            'lead_success',
+            'affiliate_clicks',
+            'estimated_lead_revenue',
+            'estimated_affiliate_revenue',
+            'total_events',
+            'top_source',
+            'top_source_events',
+        ]);
+
+        foreach ($store as $day => $data) {
+            $revenue = (array) ($data['revenue'] ?? []);
+            $events = (array) ($data['events'] ?? []);
+            $sources = (array) ($data['sources'] ?? []);
+            arsort($sources);
+
+            $topSource = (string) (array_key_first($sources) ?? 'unknown');
+            $topSourceEvents = (int) ($sources[$topSource] ?? 0);
+            $totalEvents = array_sum(array_map('intval', $events));
+
+            fputcsv($output, [
+                (string) $day,
+                (int) ($revenue['lead_success'] ?? 0),
+                (int) ($revenue['affiliate_clicks'] ?? 0),
+                number_format((float) ($revenue['estimated_lead_revenue'] ?? 0), 2, '.', ''),
+                number_format((float) ($revenue['estimated_affiliate_revenue'] ?? 0), 2, '.', ''),
+                (int) $totalEvents,
+                $topSource,
+                $topSourceEvents,
+            ]);
+        }
+
+        fclose($output);
+        exit;
+    }
+
+    private static function pruneStore(array $store, int $retentionDays): array
+    {
+        if ($retentionDays < 1 || $store === []) {
+            return $store;
+        }
+
+        $cutoffTs = strtotime(gmdate('Y-m-d') . ' -' . ($retentionDays - 1) . ' days UTC');
+        if ($cutoffTs === false) {
+            return $store;
+        }
+
+        foreach (array_keys($store) as $day) {
+            $dayTs = strtotime((string) $day . ' 00:00:00 UTC');
+            if ($dayTs === false || $dayTs < $cutoffTs) {
+                unset($store[$day]);
+            }
+        }
+
+        return $store;
     }
 
     private static function buildSummary(array $rows): array
