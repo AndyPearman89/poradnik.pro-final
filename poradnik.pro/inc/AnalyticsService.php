@@ -375,7 +375,16 @@ final class AnalyticsService
             }
         }
 
-        arsort($sourceTotals);
+        uksort($sourceTotals, static function (string $left, string $right) use ($sourceTotals): int {
+            $leftCount = (int) ($sourceTotals[$left] ?? 0);
+            $rightCount = (int) ($sourceTotals[$right] ?? 0);
+
+            if ($leftCount === $rightCount) {
+                return strcmp($left, $right);
+            }
+
+            return $rightCount <=> $leftCount;
+        });
 
         return [
             'lead_success' => $leadSuccess,

@@ -1014,6 +1014,58 @@ function testAnalyticsServiceBuildSummarySourceTypeNormalization(): void
     echo "✓ AnalyticsService::buildSummary source-type normalization contract\n";
 }
 
+function testAnalyticsServiceBuildSummaryTopSourcesTieDeterminism(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildSummary');
+    $method->setAccessible(true);
+
+    $rows = [
+        '2026-03-25' => [
+            'revenue' => [
+                'lead_success' => 0,
+                'affiliate_clicks' => 0,
+                'estimated_lead_revenue' => 0.0,
+                'estimated_affiliate_revenue' => 0.0,
+            ],
+            'sources' => [
+                'kappa' => 5,
+                'alpha' => 5,
+                'mu' => 5,
+                'beta' => 5,
+                'lambda' => 5,
+                'gamma' => 5,
+                'eta' => 5,
+                'theta' => 5,
+                'zeta' => 5,
+                'delta' => 5,
+                'epsilon' => 5,
+                'iota' => 5,
+            ],
+        ],
+    ];
+
+    $summary = (array) $method->invoke(null, $rows);
+    $topSources = (array) ($summary['top_sources'] ?? []);
+
+    assertSame(10, count($topSources), 'buildSummary should keep 10 sources when tie-count set exceeds limit');
+
+    $expectedKeys = [
+        'alpha',
+        'beta',
+        'delta',
+        'epsilon',
+        'eta',
+        'gamma',
+        'iota',
+        'kappa',
+        'lambda',
+        'mu',
+    ];
+    assertSame($expectedKeys, array_keys($topSources), 'buildSummary should use deterministic alphabetical order for tie counts');
+
+    echo "✓ AnalyticsService::buildSummary tie-order determinism contract\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -1040,6 +1092,7 @@ try {
     testAnalyticsServiceBuildSummaryTopSourcesLimit();
     testAnalyticsServiceBuildSummaryMissingKeysFallback();
     testAnalyticsServiceBuildSummarySourceTypeNormalization();
+    testAnalyticsServiceBuildSummaryTopSourcesTieDeterminism();
 
     echo "\nOverall: PASS\n";
     exit(0);

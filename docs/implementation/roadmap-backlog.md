@@ -42,7 +42,8 @@
 - 2026-03-20: Dodano test limitu top_sources w AnalyticsService::buildSummary: przy 12 źródłach zwracane jest dokładnie 10 najwyższych (malejąco, do pozycji 10).
 - 2026-03-20: Dodano test stabilności AnalyticsService::buildSummary dla brakujących kluczy revenue/sources w jednym dniu (defensywny fallback bez crasha i poprawna agregacja danych dostępnych).
 - 2026-03-20: Dodano test stabilności buildSummary dla niepoprawnych typów w sources (string/null/non-numeric/negative) i wdrozono bezpieczna normalizacje do int >= 0 w AnalyticsService::normalizeSourceCount.
-- Kolejny krok: dodać test buildSummary dla scenariusza >10 sources z remisami count (deterministyczna kolejnosc przy tie).
+- 2026-03-20: Dodano test buildSummary dla scenariusza >10 sources z remisami count oraz wdrozono deterministyczne sortowanie tie-break po nazwie source (ASC).
+- Kolejny krok: dodać test integracyjny endpointu /track weryfikujący sortowanie top_sources po tie na danych z wielu dni.
 
 ## Etap 1: Foundation (MVP techniczne)
 
