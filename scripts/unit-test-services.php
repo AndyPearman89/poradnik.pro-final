@@ -228,6 +228,27 @@ function testPruneStoreRemovesOldDays(): void
     echo "✓ AnalyticsService::pruneStore retention logic\n";
 }
 
+function testPruneStoreRetentionOneKeepsOnlyToday(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'pruneStore');
+    $method->setAccessible(true);
+
+    $today = gmdate('Y-m-d');
+    $yesterday = gmdate('Y-m-d', strtotime('-1 day UTC'));
+
+    $store = [
+        $yesterday => ['events' => ['old' => 1]],
+        $today => ['events' => ['new' => 1]],
+    ];
+
+    $result = $method->invoke(null, $store, 1);
+
+    assertTrue(! isset($result[$yesterday]), 'retention_days=1 should remove yesterday');
+    assertTrue(isset($result[$today]), 'retention_days=1 should keep today');
+
+    echo "✓ AnalyticsService::pruneStore retention_days=1 edge-case\n";
+}
+
 function testLeadServiceSanitizesPayloadBeforeApiCall(): void
 {
     global $capturedRemotePost;
@@ -348,6 +369,40 @@ function testAnalyticsServiceIngestEventRevenueMath(): void
     echo "✓ AnalyticsService::ingestEvent revenue math\n";
 }
 
+function testAnalyticsServiceIngestEventHandlesInvalidPayload(): void
+{
+    global $mockOptions;
+
+    $mockOptions = [
+        'poradnik_pro_kpi_store' => [],
+        'poradnik_pro_kpi_config' => [
+            'affiliate_value_per_click' => 1.5,
+            'lead_value_per_success' => 25.0,
+            'retention_days' => 30,
+        ],
+    ];
+
+    $request = new WP_REST_Request([
+        // no eventName, no payload.source
+        'payload' => [],
+    ]);
+
+    $response = AnalyticsService::ingestEvent($request);
+    assertSame(202, $response->get_status(), 'ingestEvent should accept invalid payload with defaults');
+
+    $data = $response->get_data();
+    assertSame(true, (bool) ($data['success'] ?? false), 'ingestEvent should return success=true for defaulted payload');
+    assertSame('unknown', (string) ($data['event'] ?? ''), 'ingestEvent should fallback eventName to unknown');
+
+    $day = gmdate('Y-m-d');
+    $store = $mockOptions['poradnik_pro_kpi_store'] ?? [];
+
+    assertSame(1, (int) ($store[$day]['events']['unknown'] ?? 0), 'ingestEvent should count unknown event');
+    assertSame(1, (int) ($store[$day]['sources']['unknown'] ?? 0), 'ingestEvent should count unknown source');
+
+    echo "✓ AnalyticsService::ingestEvent invalid payload resilience\n";
+}
+
 function testAnalyticsServiceRegistersPermissionCallback(): void
 {
     global $capturedRestRouteRegistration;
@@ -407,10 +462,12 @@ function testAnalyticsServiceSetsSecurityHeadersContract(): void
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
+    testPruneStoreRetentionOneKeepsOnlyToday();
     testLeadServiceSanitizesPayloadBeforeApiCall();
     testLeadServiceHoneypotShortCircuitsApiCall();
     testLeadServiceHandlesApiFailure();
     testAnalyticsServiceIngestEventRevenueMath();
+    testAnalyticsServiceIngestEventHandlesInvalidPayload();
     testAnalyticsServiceRegistersPermissionCallback();
     testAnalyticsServiceSetsSecurityHeadersContract();
 
