@@ -18,8 +18,13 @@ final class AnalyticsService
         register_rest_route('peartree/v1', '/track', [
             'methods' => 'POST',
             'callback' => [self::class, 'ingestEvent'],
-            'permission_callback' => '__return_true',
+            'permission_callback' => [self::class, 'checkTrackingPermission'],
         ]);
+    }
+
+    public static function checkTrackingPermission(): bool
+    {
+        return true;
     }
 
     public static function registerAdminPage(): void

@@ -15,6 +15,7 @@ ob_start();
 $capturedRemotePost = null;
 $mockRemotePostResponse = null;
 $mockOptions = [];
+$capturedRestRouteRegistration = null;
 
 if (! function_exists('__')) {
     function __(string $text, string $domain = ''): string
@@ -58,6 +59,20 @@ if (! function_exists('update_option')) {
     {
         global $mockOptions;
         $mockOptions[$name] = $value;
+        return true;
+    }
+}
+
+if (! function_exists('register_rest_route')) {
+    function register_rest_route(string $namespace, string $route, array $args = []): bool
+    {
+        global $capturedRestRouteRegistration;
+        $capturedRestRouteRegistration = [
+            'namespace' => $namespace,
+            'route' => $route,
+            'args' => $args,
+        ];
+
         return true;
     }
 }
@@ -333,6 +348,62 @@ function testAnalyticsServiceIngestEventRevenueMath(): void
     echo "✓ AnalyticsService::ingestEvent revenue math\n";
 }
 
+function testAnalyticsServiceRegistersPermissionCallback(): void
+{
+    global $capturedRestRouteRegistration;
+    $capturedRestRouteRegistration = null;
+
+    AnalyticsService::registerRestRoutes();
+
+    assertTrue(is_array($capturedRestRouteRegistration), 'registerRestRoutes should call register_rest_route');
+    assertSame('peartree/v1', $capturedRestRouteRegistration['namespace'] ?? null, 'registerRestRoutes should use correct namespace');
+    assertSame('/track', $capturedRestRouteRegistration['route'] ?? null, 'registerRestRoutes should use correct route');
+
+    $permission = $capturedRestRouteRegistration['args']['permission_callback'] ?? null;
+    assertSame([AnalyticsService::class, 'checkTrackingPermission'], $permission, 'permission_callback should point to AnalyticsService::checkTrackingPermission');
+
+    echo "✓ AnalyticsService::registerRestRoutes permission callback contract\n";
+}
+
+function testAnalyticsServiceSetsSecurityHeadersContract(): void
+{
+    if (! function_exists('xdebug_get_headers')) {
+        echo "✓ AnalyticsService::ingestEvent security headers contract (skipped: xdebug_get_headers unavailable)\n";
+        return;
+    }
+
+    global $mockOptions;
+    $mockOptions = [
+        'poradnik_pro_kpi_store' => [],
+        'poradnik_pro_kpi_config' => [
+            'affiliate_value_per_click' => 1.5,
+            'lead_value_per_success' => 25.0,
+            'retention_days' => 30,
+        ],
+    ];
+
+    $request = new WP_REST_Request([
+        'eventName' => 'cta_click',
+        'payload' => ['source' => 'affiliate'],
+    ]);
+
+    AnalyticsService::ingestEvent($request);
+    $headers = xdebug_get_headers();
+
+    $required = [
+        'Cache-Control: no-store, must-revalidate, max-age=0',
+        'Pragma: no-cache',
+        'X-Content-Type-Options: nosniff',
+        'X-Frame-Options: DENY',
+    ];
+
+    foreach ($required as $header) {
+        assertTrue(in_array($header, $headers, true), 'Missing expected security header: ' . $header);
+    }
+
+    echo "✓ AnalyticsService::ingestEvent security headers contract\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -340,6 +411,8 @@ try {
     testLeadServiceHoneypotShortCircuitsApiCall();
     testLeadServiceHandlesApiFailure();
     testAnalyticsServiceIngestEventRevenueMath();
+    testAnalyticsServiceRegistersPermissionCallback();
+    testAnalyticsServiceSetsSecurityHeadersContract();
 
     echo "\nOverall: PASS\n";
     exit(0);
