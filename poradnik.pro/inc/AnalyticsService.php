@@ -370,7 +370,8 @@ final class AnalyticsService
             $affiliateRevenue += (float) ($revenue['estimated_affiliate_revenue'] ?? 0);
 
             foreach ($sources as $source => $count) {
-                $sourceTotals[(string) $source] = (int) ($sourceTotals[(string) $source] ?? 0) + (int) $count;
+                $normalizedSource = (string) $source;
+                $sourceTotals[$normalizedSource] = (int) ($sourceTotals[$normalizedSource] ?? 0) + self::normalizeSourceCount($count);
             }
         }
 
@@ -382,5 +383,14 @@ final class AnalyticsService
             'estimated_total_revenue' => $leadRevenue + $affiliateRevenue,
             'top_sources' => array_slice($sourceTotals, 0, 10, true),
         ];
+    }
+
+    private static function normalizeSourceCount(mixed $value): int
+    {
+        if (! is_scalar($value) || ! is_numeric((string) $value)) {
+            return 0;
+        }
+
+        return max(0, (int) $value);
     }
 }

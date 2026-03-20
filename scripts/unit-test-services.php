@@ -969,6 +969,51 @@ function testAnalyticsServiceBuildSummaryMissingKeysFallback(): void
     echo "✓ AnalyticsService::buildSummary missing-keys fallback contract\n";
 }
 
+function testAnalyticsServiceBuildSummarySourceTypeNormalization(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildSummary');
+    $method->setAccessible(true);
+
+    $rows = [
+        '2026-03-24' => [
+            'revenue' => [
+                'lead_success' => 0,
+                'affiliate_clicks' => 0,
+                'estimated_lead_revenue' => 0.0,
+                'estimated_affiliate_revenue' => 0.0,
+            ],
+            'sources' => [
+                'organic' => '5',
+                'affiliate' => null,
+                'social' => 'oops',
+                'paid' => -3,
+            ],
+        ],
+        '2026-03-23' => [
+            'revenue' => [
+                'lead_success' => 0,
+                'affiliate_clicks' => 0,
+                'estimated_lead_revenue' => 0.0,
+                'estimated_affiliate_revenue' => 0.0,
+            ],
+            'sources' => [
+                'organic' => '2.9',
+                'affiliate' => '3',
+            ],
+        ],
+    ];
+
+    $summary = (array) $method->invoke(null, $rows);
+    $topSources = (array) ($summary['top_sources'] ?? []);
+
+    assertSame(7, (int) ($topSources['organic'] ?? -1), 'buildSummary should normalize numeric strings and aggregate source counts');
+    assertSame(3, (int) ($topSources['affiliate'] ?? -1), 'buildSummary should ignore null and keep valid numeric source counts');
+    assertSame(0, (int) ($topSources['social'] ?? -1), 'buildSummary should normalize non-numeric source count to 0');
+    assertSame(0, (int) ($topSources['paid'] ?? -1), 'buildSummary should clamp negative source count to 0');
+
+    echo "✓ AnalyticsService::buildSummary source-type normalization contract\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -994,6 +1039,7 @@ try {
     testAnalyticsServiceBuildSummaryEmptyInputFallback();
     testAnalyticsServiceBuildSummaryTopSourcesLimit();
     testAnalyticsServiceBuildSummaryMissingKeysFallback();
+    testAnalyticsServiceBuildSummarySourceTypeNormalization();
 
     echo "\nOverall: PASS\n";
     exit(0);
