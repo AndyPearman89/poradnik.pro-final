@@ -1,0 +1,11 @@
+{
+  "cycles": 0,
+  "last_commit": "",
+  "last_task": null,
+  "last_cycle_status": {
+    "implemented": false,
+    "validated": false,
+    "committed": false,
+    "pushed": false
+  }
+}

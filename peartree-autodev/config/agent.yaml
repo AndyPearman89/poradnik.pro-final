@@ -1,0 +1,18 @@
+{
+  "repo_path": ".",
+  "loop_seconds": 120,
+  "max_cycles": 0,
+  "git_remote": "origin",
+  "git_branch": "main",
+  "push": true,
+  "validation": {
+    "php_lint": true,
+    "sanity_commands": [
+      "php scripts/unit-test-services.php",
+      "php scripts/unit-test-local-module-api.php"
+    ]
+  },
+  "codegen": {
+    "command": ""
+  }
+}

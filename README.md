@@ -50,3 +50,22 @@ Przyklad (lokalnie):
 ```bash
 bash scripts/deploy-theme.sh --local-target /var/www/html/wp-content/themes --dry-run
 ```
+
+## PEARTREE AUTODEV SYSTEM v1.0
+
+Autonomiczny agent developerski 24/7 znajduje sie w katalogu:
+
+- peartree-autodev/
+
+Uruchomienie lokalne (single cycle):
+
+```bash
+cd peartree-autodev
+python agent/runner.py
+```
+
+Uruchomienie kontenerowe (loop 24/7):
+
+```bash
+docker compose -f peartree-autodev/docker-compose.yml up -d --build
+```

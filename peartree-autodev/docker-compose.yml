@@ -1,0 +1,12 @@
+services:
+  autodev:
+    build:
+      context: ..
+      dockerfile: peartree-autodev/Dockerfile
+    container_name: peartree-autodev
+    working_dir: /workspace
+    volumes:
+      - ../:/workspace
+    environment:
+      - AUTODEV_REPO_PATH=/workspace
+    restart: unless-stopped

@@ -1,0 +1,76 @@
+PEARTREE AUTODEV SYSTEM v1.0 (PRODUCTION TXT)
+
+==================================================
+CEL
+===
+
+Zbudowanie autonomicznego agenta developerskiego,
+ktory dziala 24/7 i wykonuje:
+
+* analize repozytorium
+* wybor kolejnego zadania
+* generowanie kodu
+* walidacje
+* commit
+* push
+
+Bez zatrzymywania sie i bez pytan.
+
+==================================================
+ARCHITEKTURA
+============
+
+/peartree-autodev
+/agent
+runner.py
+planner.py
+coder.py
+reviewer.py
+git.py
+/config
+agent.yaml
+/memory
+context.json
+/logs
+docker-compose.yml
+Dockerfile
+
+==================================================
+FLOW SYSTEMU
+============
+
+1. ANALYZE
+
+* skan repo
+* wykrycie brakow (moduly, endpointy, TODO)
+
+2. DECIDE
+
+* wybor jednego konkretnego taska
+* brak planowania wieloetapowego
+
+3. IMPLEMENT
+
+* generowanie kodu (production-ready)
+* zgodnosc z DDD
+
+4. VALIDATE
+
+* sprawdzenie skladni (php -l)
+* sanity check
+
+5. DOCUMENT
+
+* aktualizacja README / docs
+
+6. COMMIT
+
+* commit atomowy
+
+7. PUSH
+
+* push do repo
+
+8. LOOP
+
+* powrot do kroku 1

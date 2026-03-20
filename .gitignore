@@ -3,3 +3,8 @@
 
 # OS/editor noise
 .DS_Store
+
+# PEARTREE AUTODEV runtime artifacts
+peartree-autodev/agent/__pycache__/
+peartree-autodev/logs/*.jsonl
+peartree-autodev/logs/last-task.json
