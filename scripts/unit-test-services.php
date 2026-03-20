@@ -831,6 +831,58 @@ function testAnalyticsServiceExportFilenameTimestampSmokeCheck(): void
     echo "✓ AnalyticsService::buildExportHeaders filename timestamp smoke-check\n";
 }
 
+function testAnalyticsServiceBuildSummaryMultiDayAggregation(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildSummary');
+    $method->setAccessible(true);
+
+    $rows = [
+        '2026-03-20' => [
+            'revenue' => [
+                'lead_success' => 2,
+                'affiliate_clicks' => 3,
+                'estimated_lead_revenue' => 60.0,
+                'estimated_affiliate_revenue' => 4.5,
+            ],
+            'sources' => [
+                'organic' => 5,
+                'affiliate' => 2,
+            ],
+        ],
+        '2026-03-19' => [
+            'revenue' => [
+                'lead_success' => 1,
+                'affiliate_clicks' => 4,
+                'estimated_lead_revenue' => 30.0,
+                'estimated_affiliate_revenue' => 6.0,
+            ],
+            'sources' => [
+                'affiliate' => 7,
+                'social' => 1,
+            ],
+        ],
+    ];
+
+    $summary = (array) $method->invoke(null, $rows);
+
+    assertSame(3, (int) ($summary['lead_success'] ?? 0), 'buildSummary should aggregate lead_success across multiple days');
+    assertSame(7, (int) ($summary['affiliate_clicks'] ?? 0), 'buildSummary should aggregate affiliate_clicks across multiple days');
+    assertSame(100.5, (float) ($summary['estimated_total_revenue'] ?? 0), 'buildSummary should sum lead and affiliate revenues across multiple days');
+
+    $topSources = (array) ($summary['top_sources'] ?? []);
+    assertSame(
+        [
+            'affiliate' => 9,
+            'organic' => 5,
+            'social' => 1,
+        ],
+        $topSources,
+        'buildSummary should aggregate top_sources and sort descending by total count'
+    );
+
+    echo "✓ AnalyticsService::buildSummary multi-day aggregation contract\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -852,6 +904,7 @@ try {
     testAnalyticsServiceExportCsvEmptyStoreHeaderOnly();
     testAnalyticsServiceExportFilenameTimestampSmokeCheck();
     testAnalyticsServiceExportCsvValueContract();
+    testAnalyticsServiceBuildSummaryMultiDayAggregation();
 
     echo "\nOverall: PASS\n";
     exit(0);

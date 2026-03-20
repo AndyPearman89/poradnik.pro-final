@@ -37,7 +37,8 @@
 - 2026-03-20: Dodano regresyjne testy eksportu CSV dla pustego store (tylko header row) oraz smoke-check nazwy pliku z timestampem (Ymd-His).
 - 2026-03-20: Dodano testy negatywne export request dla braku uprawnień manage_options oraz braku parametru poradnik_pro_export=csv.
 - 2026-03-20: Dodano testy kontraktu wartości eksportu CSV: format revenue do 2 miejsc po przecinku oraz fallback top_source=unknown i top_source_events=0.
-- Kolejny krok: dodać testy sumaryczne buildSummary (lead_success, affiliate_clicks, estimated_total_revenue i top_sources) dla wielodniowego store.
+- 2026-03-20: Dodano test kontraktu AnalyticsService::buildSummary dla wielodniowego store: agregacja lead_success, affiliate_clicks, estimated_total_revenue oraz top_sources (sumowanie i sortowanie malejące).
+- Kolejny krok: dodać test buildSummary dla pustego inputu (rows=[]), aby potwierdzić stabilny fallback 0 i puste top_sources.
 
 ## Etap 1: Foundation (MVP techniczne)
 
