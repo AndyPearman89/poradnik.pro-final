@@ -3,6 +3,8 @@
 
 declare(strict_types=1);
 
+ob_start();
+
 /**
  * Lightweight unit tests for service classes without PHPUnit.
  *
@@ -11,6 +13,8 @@ declare(strict_types=1);
  */
 
 $capturedRemotePost = null;
+$mockRemotePostResponse = null;
+$mockOptions = [];
 
 if (! function_exists('__')) {
     function __(string $text, string $domain = ''): string
@@ -30,6 +34,31 @@ if (! function_exists('sanitize_textarea_field')) {
     function sanitize_textarea_field(string $text): string
     {
         return trim(strip_tags($text));
+    }
+}
+
+if (! function_exists('sanitize_key')) {
+    function sanitize_key(string $key): string
+    {
+        $key = strtolower($key);
+        return preg_replace('/[^a-z0-9_\-]/', '', $key) ?? '';
+    }
+}
+
+if (! function_exists('get_option')) {
+    function get_option(string $name, mixed $default = false): mixed
+    {
+        global $mockOptions;
+        return array_key_exists($name, $mockOptions) ? $mockOptions[$name] : $default;
+    }
+}
+
+if (! function_exists('update_option')) {
+    function update_option(string $name, mixed $value, bool $autoload = false): bool
+    {
+        global $mockOptions;
+        $mockOptions[$name] = $value;
+        return true;
     }
 }
 
@@ -75,10 +104,15 @@ if (! function_exists('wp_remote_post')) {
     function wp_remote_post(string $url, array $args = []): array
     {
         global $capturedRemotePost;
+        global $mockRemotePostResponse;
         $capturedRemotePost = [
             'url' => $url,
             'args' => $args,
         ];
+
+        if (is_array($mockRemotePostResponse)) {
+            return $mockRemotePostResponse;
+        }
 
         return [
             'response' => ['code' => 200],
@@ -98,6 +132,39 @@ if (! function_exists('wp_remote_retrieve_body')) {
     function wp_remote_retrieve_body(array $response): string
     {
         return (string) ($response['body'] ?? '');
+    }
+}
+
+if (! class_exists('WP_REST_Request')) {
+    class WP_REST_Request
+    {
+        public function __construct(private array $jsonParams = [])
+        {
+        }
+
+        public function get_json_params(): array
+        {
+            return $this->jsonParams;
+        }
+    }
+}
+
+if (! class_exists('WP_REST_Response')) {
+    class WP_REST_Response
+    {
+        public function __construct(private array $data = [], private int $status = 200)
+        {
+        }
+
+        public function get_data(): array
+        {
+            return $this->data;
+        }
+
+        public function get_status(): int
+        {
+            return $this->status;
+        }
     }
 }
 
@@ -192,11 +259,87 @@ function testLeadServiceHoneypotShortCircuitsApiCall(): void
     echo "✓ LeadService::submit honeypot short-circuit\n";
 }
 
+function testLeadServiceHandlesApiFailure(): void
+{
+    global $capturedRemotePost;
+    global $mockRemotePostResponse;
+
+    $capturedRemotePost = null;
+    $mockRemotePostResponse = [
+        'response' => ['code' => 500],
+        'body' => '{"ok":false}',
+    ];
+
+    $response = LeadService::submit([
+        'website' => '',
+        'name' => 'Jan',
+        'email_or_phone' => 'jan@example.com',
+        'problem' => 'Test',
+        'location' => 'Krakow',
+    ]);
+
+    assertSame(false, $response['ok'], 'LeadService should return ok=false when API fails');
+    assertSame(500, $response['status'], 'LeadService should expose API failure status');
+    assertSame('Could not send lead. Try again.', $response['message'], 'LeadService should return failure message');
+    assertSame('API request failed.', $response['error'], 'LeadService should expose normalized API error');
+    assertTrue(is_array($capturedRemotePost), 'LeadService should still attempt API call on non-honeypot payload');
+
+    $mockRemotePostResponse = null;
+
+    echo "✓ LeadService::submit API error handling\n";
+}
+
+function testAnalyticsServiceIngestEventRevenueMath(): void
+{
+    global $mockOptions;
+
+    $mockOptions = [
+        'poradnik_pro_kpi_store' => [],
+        'poradnik_pro_kpi_config' => [
+            'affiliate_value_per_click' => 2.5,
+            'lead_value_per_success' => 30.0,
+            'retention_days' => 30,
+        ],
+    ];
+
+    $ctaRequest = new WP_REST_Request([
+        'eventName' => 'cta_click',
+        'payload' => [
+            'source' => 'affiliate',
+        ],
+    ]);
+    $ctaResponse = AnalyticsService::ingestEvent($ctaRequest);
+
+    assertSame(202, $ctaResponse->get_status(), 'ingestEvent should return accepted status');
+    assertSame(true, ($ctaResponse->get_data()['success'] ?? false), 'ingestEvent should return success=true');
+
+    $leadRequest = new WP_REST_Request([
+        'eventName' => 'lead_submit_success',
+        'payload' => [
+            'source' => 'organic',
+        ],
+    ]);
+    AnalyticsService::ingestEvent($leadRequest);
+
+    $day = gmdate('Y-m-d');
+    $store = $mockOptions['poradnik_pro_kpi_store'] ?? [];
+    $revenue = $store[$day]['revenue'] ?? [];
+
+    assertSame(1, (int) ($revenue['affiliate_clicks'] ?? 0), 'ingestEvent should increment affiliate_clicks for affiliate cta_click');
+    assertSame(2.5, (float) ($revenue['estimated_affiliate_revenue'] ?? 0), 'ingestEvent should add configured affiliate revenue');
+    assertSame(1, (int) ($revenue['lead_success'] ?? 0), 'ingestEvent should increment lead_success for lead_submit_success');
+    assertSame(30.0, (float) ($revenue['estimated_lead_revenue'] ?? 0), 'ingestEvent should add configured lead revenue');
+
+    echo "✓ AnalyticsService::ingestEvent revenue math\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
     testLeadServiceSanitizesPayloadBeforeApiCall();
     testLeadServiceHoneypotShortCircuitsApiCall();
+    testLeadServiceHandlesApiFailure();
+    testAnalyticsServiceIngestEventRevenueMath();
 
     echo "\nOverall: PASS\n";
     exit(0);
