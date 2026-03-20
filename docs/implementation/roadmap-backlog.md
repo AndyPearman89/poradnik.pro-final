@@ -39,7 +39,8 @@
 - 2026-03-20: Dodano testy kontraktu wartości eksportu CSV: format revenue do 2 miejsc po przecinku oraz fallback top_source=unknown i top_source_events=0.
 - 2026-03-20: Dodano test kontraktu AnalyticsService::buildSummary dla wielodniowego store: agregacja lead_success, affiliate_clicks, estimated_total_revenue oraz top_sources (sumowanie i sortowanie malejące).
 - 2026-03-20: Dodano test fallbacku AnalyticsService::buildSummary dla pustego inputu (rows=[]): lead_success=0, affiliate_clicks=0, estimated_total_revenue=0.0, top_sources=[].
-- Kolejny krok: dodać test top_sources limitu 10 w buildSummary (więcej niż 10 źródeł).
+- 2026-03-20: Dodano test limitu top_sources w AnalyticsService::buildSummary: przy 12 źródłach zwracane jest dokładnie 10 najwyższych (malejąco, do pozycji 10).
+- Kolejny krok: dodać test stabilności buildSummary dla brakującego klucza revenue/sources w pojedynczym dniu (defensywny fallback).
 
 ## Etap 1: Foundation (MVP techniczne)
 

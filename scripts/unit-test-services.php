@@ -898,6 +898,44 @@ function testAnalyticsServiceBuildSummaryEmptyInputFallback(): void
     echo "✓ AnalyticsService::buildSummary empty-input fallback contract\n";
 }
 
+function testAnalyticsServiceBuildSummaryTopSourcesLimit(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildSummary');
+    $method->setAccessible(true);
+
+    $sources = [];
+    for ($i = 1; $i <= 12; $i++) {
+        $sources['s' . $i] = $i;
+    }
+
+    $rows = [
+        '2026-03-22' => [
+            'revenue' => [
+                'lead_success' => 0,
+                'affiliate_clicks' => 0,
+                'estimated_lead_revenue' => 0.0,
+                'estimated_affiliate_revenue' => 0.0,
+            ],
+            'sources' => $sources,
+        ],
+    ];
+
+    $summary = (array) $method->invoke(null, $rows);
+    $topSources = (array) ($summary['top_sources'] ?? []);
+
+    assertSame(10, count($topSources), 'buildSummary should limit top_sources to 10 entries');
+    assertTrue(isset($topSources['s12']), 'buildSummary should keep highest-count sources in top_sources');
+    assertTrue(isset($topSources['s3']), 'buildSummary should include tenth source when 12 sources exist');
+    assertTrue(! isset($topSources['s2']), 'buildSummary should drop sources below top 10 threshold');
+    assertTrue(! isset($topSources['s1']), 'buildSummary should drop sources below top 10 threshold');
+
+    $keys = array_keys($topSources);
+    assertSame('s12', (string) ($keys[0] ?? ''), 'buildSummary should keep descending source order at the top');
+    assertSame('s3', (string) ($keys[9] ?? ''), 'buildSummary should keep descending source order at the tenth position');
+
+    echo "✓ AnalyticsService::buildSummary top_sources limit contract\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -921,6 +959,7 @@ try {
     testAnalyticsServiceExportCsvValueContract();
     testAnalyticsServiceBuildSummaryMultiDayAggregation();
     testAnalyticsServiceBuildSummaryEmptyInputFallback();
+    testAnalyticsServiceBuildSummaryTopSourcesLimit();
 
     echo "\nOverall: PASS\n";
     exit(0);
