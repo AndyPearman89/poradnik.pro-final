@@ -32,7 +32,9 @@
 - 2026-03-20: Dodano asercje security contract dla endpointu /track w scripts/unit-test-services.php: weryfikacja permission_callback w registerRestRoutes oraz nagłówków bezpieczeństwa (Cache-Control, Pragma, X-Content-Type-Options, X-Frame-Options) w ingestEvent.
 - 2026-03-20: Dodano edge-case testy dla AnalyticsService w scripts/unit-test-services.php: retention_days=1 oraz odporność ingestEvent na niepoprawny payload (brak eventName/source).
 - 2026-03-20: Dodano test kontraktu CSV export w scripts/unit-test-services.php: nagłówki exportu, kolumny CSV i sortowanie dni rosnąco.
-- Kolejny krok: dodać testy regresyjne dla config form (retention clamp 14-365) oraz walidację nonce-flow dla export request.
+- 2026-03-20: Dodano testy regresyjne config form i export flow w scripts/unit-test-services.php: clamp retention_days do zakresu 14-365 oraz nonce-flow (invalid nonce => early return, bez outputu CSV).
+- 2026-03-20: Dodano testy scenariusza export request z poprawnym nonce (payload CSV + Content-Disposition) przez izolowany adapter I/O (buildExportPayloadFromRequest), bez użycia exit w testach.
+- Kolejny krok: dodać testy regresyjne dla pustego store w eksporcie CSV (tylko header row) oraz smoke-check dla nazwy pliku z timestampem.
 
 ## Etap 1: Foundation (MVP techniczne)
 

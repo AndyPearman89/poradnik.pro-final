@@ -245,29 +245,42 @@ final class AnalyticsService
 
     private static function handleExportRequest(): void
     {
-        if (! current_user_can('manage_options')) {
+        $exportPayload = self::buildExportPayloadFromRequest();
+        if ($exportPayload === null) {
             return;
+        }
+
+        nocache_headers();
+        foreach ((array) ($exportPayload['headers'] ?? []) as $headerLine) {
+            header($headerLine);
+        }
+
+        echo (string) ($exportPayload['csv'] ?? '');
+        exit;
+    }
+
+    private static function buildExportPayloadFromRequest(): ?array
+    {
+        if (! current_user_can('manage_options')) {
+            return null;
         }
 
         $export = sanitize_key((string) ($_GET['poradnik_pro_export'] ?? ''));
         if ($export !== 'csv') {
-            return;
+            return null;
         }
 
         $nonce = sanitize_text_field((string) ($_GET['_wpnonce'] ?? ''));
         if (! wp_verify_nonce($nonce, 'poradnik_pro_kpi_export')) {
-            return;
+            return null;
         }
 
         $store = (array) get_option(self::OPTION_KEY, []);
 
-        nocache_headers();
-        foreach (self::buildExportHeaders() as $headerLine) {
-            header($headerLine);
-        }
-
-        echo self::buildExportCsv($store);
-        exit;
+        return [
+            'headers' => self::buildExportHeaders(),
+            'csv' => self::buildExportCsv($store),
+        ];
     }
 
     private static function buildExportHeaders(): array

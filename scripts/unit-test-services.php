@@ -630,6 +630,74 @@ function testAnalyticsServiceExportNonceFlowInvalidNonceReturnsEarly(): void
     echo "✓ AnalyticsService::handleExportRequest nonce-flow regression\n";
 }
 
+function testAnalyticsServiceExportPayloadValidNonceContract(): void
+{
+    global $mockCanManageOptions;
+    global $mockNonceVerification;
+    global $mockOptions;
+
+    $mockCanManageOptions = true;
+    $mockNonceVerification = true;
+    $mockOptions = [
+        'poradnik_pro_kpi_store' => [
+            '2026-03-20' => [
+                'events' => ['a' => 1],
+                'sources' => ['affiliate' => 1],
+                'revenue' => [
+                    'lead_success' => 1,
+                    'affiliate_clicks' => 2,
+                    'estimated_lead_revenue' => 30.0,
+                    'estimated_affiliate_revenue' => 3.0,
+                ],
+            ],
+            '2026-03-19' => [
+                'events' => ['b' => 2],
+                'sources' => ['organic' => 2],
+                'revenue' => [
+                    'lead_success' => 0,
+                    'affiliate_clicks' => 0,
+                    'estimated_lead_revenue' => 0.0,
+                    'estimated_affiliate_revenue' => 0.0,
+                ],
+            ],
+        ],
+    ];
+
+    $_GET = [
+        'poradnik_pro_export' => 'csv',
+        '_wpnonce' => 'valid',
+    ];
+
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildExportPayloadFromRequest');
+    $method->setAccessible(true);
+    $payload = $method->invoke(null);
+
+    assertTrue(is_array($payload), 'buildExportPayloadFromRequest should return payload for valid nonce flow');
+
+    $headers = (array) ($payload['headers'] ?? []);
+    $hasDisposition = false;
+    foreach ($headers as $headerLine) {
+        if (str_starts_with((string) $headerLine, 'Content-Disposition: attachment; filename="poradnik-kpi-export-')) {
+            $hasDisposition = true;
+            break;
+        }
+    }
+    assertTrue($hasDisposition, 'valid export payload should include Content-Disposition header');
+
+    $csv = (string) ($payload['csv'] ?? '');
+    $lines = preg_split('/\r?\n/', trim($csv)) ?: [];
+    assertTrue(count($lines) >= 3, 'valid export payload should include header + data rows');
+
+    $row1 = str_getcsv($lines[1]);
+    $row2 = str_getcsv($lines[2]);
+    assertSame('2026-03-19', $row1[0] ?? null, 'valid export payload should keep ascending day sorting');
+    assertSame('2026-03-20', $row2[0] ?? null, 'valid export payload should keep ascending day sorting');
+
+    $_GET = [];
+
+    echo "✓ AnalyticsService::buildExportPayloadFromRequest valid nonce contract\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -645,6 +713,7 @@ try {
     testAnalyticsServiceExportCsvColumnsAndSortOrder();
     testAnalyticsServiceConfigRetentionClamp();
     testAnalyticsServiceExportNonceFlowInvalidNonceReturnsEarly();
+    testAnalyticsServiceExportPayloadValidNonceContract();
 
     echo "\nOverall: PASS\n";
     exit(0);
