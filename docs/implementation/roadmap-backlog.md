@@ -43,7 +43,8 @@
 - 2026-03-20: Dodano test stabilności AnalyticsService::buildSummary dla brakujących kluczy revenue/sources w jednym dniu (defensywny fallback bez crasha i poprawna agregacja danych dostępnych).
 - 2026-03-20: Dodano test stabilności buildSummary dla niepoprawnych typów w sources (string/null/non-numeric/negative) i wdrozono bezpieczna normalizacje do int >= 0 w AnalyticsService::normalizeSourceCount.
 - 2026-03-20: Dodano test buildSummary dla scenariusza >10 sources z remisami count oraz wdrozono deterministyczne sortowanie tie-break po nazwie source (ASC).
-- Kolejny krok: dodać test integracyjny endpointu /track weryfikujący sortowanie top_sources po tie na danych z wielu dni.
+- 2026-03-21: Dodano test integracyjny kontraktu /track dla sortowania top_sources po tie na danych z wielu dni (ingestEvent + buildSummary) w scripts/unit-test-services.php.
+- Kolejny krok: dodać test E2E (HTTP) w stacku Docker, który potwierdzi widoczność uporządkowanych top_sources w dashboardzie KPI dla danych wielodniowych.
 
 ## Etap 1: Foundation (MVP techniczne)
 

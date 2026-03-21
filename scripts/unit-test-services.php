@@ -1066,6 +1066,74 @@ function testAnalyticsServiceBuildSummaryTopSourcesTieDeterminism(): void
     echo "✓ AnalyticsService::buildSummary tie-order determinism contract\n";
 }
 
+function testAnalyticsServiceTrackEndpointTopSourcesTieMultiDayIntegration(): void
+{
+    global $mockOptions;
+
+    $today = gmdate('Y-m-d');
+    $yesterday = gmdate('Y-m-d', strtotime('-1 day UTC'));
+
+    // Seed previous day so endpoint ingest on current day forms a multi-day tie.
+    $mockOptions = [
+        'poradnik_pro_kpi_store' => [
+            $yesterday => [
+                'events' => [
+                    'cta_click' => 2,
+                ],
+                'sources' => [
+                    'alpha' => 1,
+                    'beta' => 1,
+                ],
+                'revenue' => [
+                    'affiliate_clicks' => 0,
+                    'lead_success' => 0,
+                    'estimated_affiliate_revenue' => 0.0,
+                    'estimated_lead_revenue' => 0.0,
+                ],
+            ],
+        ],
+        'poradnik_pro_kpi_config' => [
+            'affiliate_value_per_click' => 1.5,
+            'lead_value_per_success' => 25.0,
+            'retention_days' => 30,
+        ],
+    ];
+
+    AnalyticsService::ingestEvent(new WP_REST_Request([
+        'eventName' => 'cta_click',
+        'payload' => ['source' => 'beta'],
+    ]));
+    AnalyticsService::ingestEvent(new WP_REST_Request([
+        'eventName' => 'cta_click',
+        'payload' => ['source' => 'alpha'],
+    ]));
+
+    $store = (array) ($mockOptions['poradnik_pro_kpi_store'] ?? []);
+    $rows = [];
+    if (isset($store[$today])) {
+        $rows[$today] = $store[$today];
+    }
+    if (isset($store[$yesterday])) {
+        $rows[$yesterday] = $store[$yesterday];
+    }
+
+    $summaryMethod = new ReflectionMethod(AnalyticsService::class, 'buildSummary');
+    $summaryMethod->setAccessible(true);
+
+    $summary = (array) $summaryMethod->invoke(null, $rows);
+    $topSources = (array) ($summary['top_sources'] ?? []);
+
+    assertSame(2, (int) ($topSources['alpha'] ?? -1), '/track integration should aggregate alpha count across days');
+    assertSame(2, (int) ($topSources['beta'] ?? -1), '/track integration should aggregate beta count across days');
+    assertSame(
+        ['alpha', 'beta'],
+        array_slice(array_keys($topSources), 0, 2),
+        '/track integration should keep deterministic alphabetical order for tie counts across days'
+    );
+
+    echo "✓ AnalyticsService::ingestEvent + buildSummary multi-day tie-order integration\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -1093,6 +1161,7 @@ try {
     testAnalyticsServiceBuildSummaryMissingKeysFallback();
     testAnalyticsServiceBuildSummarySourceTypeNormalization();
     testAnalyticsServiceBuildSummaryTopSourcesTieDeterminism();
+    testAnalyticsServiceTrackEndpointTopSourcesTieMultiDayIntegration();
 
     echo "\nOverall: PASS\n";
     exit(0);
