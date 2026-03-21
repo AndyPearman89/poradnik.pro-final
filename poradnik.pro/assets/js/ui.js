@@ -1,5 +1,6 @@
 (() => {
     const experimentVariant = window.PoradnikPro?.config?.experiment?.conversionHeroV1 || 'A';
+    const experimentName = 'conversion_hero_v1';
 
     const stickyCta = document.querySelector('[data-pp-sticky-cta]');
     const ctaButton = stickyCta?.querySelector('a, button');
@@ -8,6 +9,8 @@
             window.PoradnikProTracking?.emit('cta_click', {
                 source: 'sticky_mobile',
                 label: ctaButton.textContent?.trim() || 'cta',
+                variant: experimentVariant,
+                experiment: experimentName,
             });
         });
     }
@@ -57,6 +60,7 @@
                     source: 'inline_injection',
                     label: link.textContent?.trim() || 'inline_cta',
                     variant: experimentVariant,
+                    experiment: experimentName,
                 });
             });
         });
@@ -72,6 +76,8 @@
                 mode,
                 label: link.textContent?.trim() || 'affiliate_cta',
                 href: link.getAttribute('href') || '',
+                variant: experimentVariant,
+                experiment: experimentName,
             });
         });
     });

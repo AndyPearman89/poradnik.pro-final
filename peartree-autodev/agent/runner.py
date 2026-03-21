@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -10,9 +11,15 @@ from typing import Any
 
 if __package__ in (None, ""):
     sys.path.append(str(Path(__file__).resolve().parent.parent))
-    from agent import coder, git as git_ops, planner, reviewer
+    from agent import planner, reviewer
+    from agent.executor import execute_task
+    from agent.logger import log
+    from agent.memory import load_memory, save_memory
 else:
-    from . import coder, git as git_ops, planner, reviewer
+    from . import planner, reviewer
+    from .executor import execute_task
+    from .logger import log
+    from .memory import load_memory, save_memory
 
 
 def load_config(config_path: Path) -> dict[str, Any]:
@@ -23,112 +30,112 @@ def load_config(config_path: Path) -> dict[str, Any]:
         raise RuntimeError(f"agent.yaml must be JSON-compatible YAML. Parse error: {exc}") from exc
 
 
-def load_context(context_path: Path) -> dict[str, Any]:
-    if not context_path.exists():
-        return {"cycles": 0, "last_commit": "", "last_task": None}
-    try:
-        return json.loads(context_path.read_text(encoding="utf-8"))
-    except Exception:
-        return {"cycles": 0, "last_commit": "", "last_task": None}
-
-
-def save_context(context_path: Path, payload: dict[str, Any]) -> None:
-    context_path.parent.mkdir(parents=True, exist_ok=True)
-    context_path.write_text(json.dumps(payload, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
-
-
 def append_log(log_file: Path, payload: dict[str, Any]) -> None:
     log_file.parent.mkdir(parents=True, exist_ok=True)
     with log_file.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(payload, ensure_ascii=True) + "\n")
 
 
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="PearTree Copilot Python Runner v2")
+    parser.add_argument("--interactive", action="store_true", help="Print task execution details to stdout")
+    parser.add_argument("--cycles", type=int, default=0, help="Stop after N cycles (0 means infinite)")
+    parser.add_argument("--sleep", type=int, default=0, help="Override loop sleep seconds")
+    return parser.parse_args()
+
+
 def main() -> int:
+    args = _parse_args()
+
     base = Path(__file__).resolve().parent.parent
     config_path = base / "config" / "agent.yaml"
-    memory_path = base / "memory" / "context.json"
+    memory_path = Path(os.environ.get("AUTODEV_MEMORY_PATH") or str(base / "memory" / "context.json"))
     log_file = base / "logs" / "runner.log.jsonl"
-    logs_path = base / "logs"
 
     config = load_config(config_path)
-    repo_path = Path(os.environ.get("AUTODEV_REPO_PATH") or str(config.get("repo_path") or ".")).resolve()
+    repo_value = Path(os.environ.get("AUTODEV_REPO_PATH") or str(config.get("repo_path") or "."))
+    if not repo_value.is_absolute():
+        repo_path = (base / repo_value).resolve()
+    else:
+        repo_path = repo_value.resolve()
 
-    context = load_context(memory_path)
-    loop_seconds = int(config.get("loop_seconds", 120))
-    max_cycles = int(os.environ.get("AUTODEV_MAX_CYCLES") or config.get("max_cycles", 0))
-    do_push = bool(config.get("push", False))
-    git_remote = str(config.get("git_remote", "origin"))
-    git_branch = str(config.get("git_branch", "main"))
+    memory = load_memory(memory_path)
+    memory.setdefault("history", [])
+    memory.setdefault("meta", {})
 
+    loop_seconds = int(args.sleep or config.get("loop_seconds", 120))
+    max_cycles = int(args.cycles or os.environ.get("AUTODEV_MAX_CYCLES") or config.get("max_cycles", 0))
+
+    log("AGENT V2 STARTED")
+    log(f"repo={repo_path}")
+
+    cycle = 0
     while True:
-        cycle = int(context.get("cycles", 0)) + 1
+        cycle += 1
         started = datetime.now(timezone.utc).isoformat()
 
-        analysis = planner.analyze(repo_path)
-        task = planner.decide(analysis, context)
+        tasks = planner.plan(memory, repo_path=repo_path, config=config)
+        if not isinstance(tasks, list):
+            tasks = []
 
         cycle_log: dict[str, Any] = {
             "cycle": cycle,
             "started_at": started,
-            "task": task.as_dict() if task else None,
-            "analysis_summary": {
-                "todo_candidates": len(analysis.get("todo_candidates", [])),
-                "dirty_files": len(analysis.get("dirty_files", [])),
-            },
+            "tasks_planned": len(tasks),
+            "tasks": [],
         }
 
-        if task is None:
+        if not tasks:
             cycle_log["status"] = "idle"
             append_log(log_file, cycle_log)
-            context["cycles"] = cycle
-            save_context(memory_path, context)
+            memory["meta"] = {
+                "cycles": cycle,
+                "last_status": "idle",
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+            save_memory(memory, memory_path)
             if max_cycles > 0 and cycle >= max_cycles:
                 break
             time.sleep(loop_seconds)
             continue
 
-        impl = coder.implement(repo_path, task, config, logs_path)
-        cycle_log["implement"] = {
-            "ok": impl.ok,
-            "notes": impl.notes,
-            "changed_files": impl.changed_files,
+        for task in tasks:
+            task_name = str(task.get("name") or "unnamed")
+            log(f"Executing: {task_name}")
+
+            result = execute_task(task, repo_path=repo_path, config=config)
+            decision = reviewer.review(task, result, memory=memory, config=config)
+
+            if decision == "retry":
+                retry_result = execute_task(task, repo_path=repo_path, config=config)
+                retry_decision = reviewer.review(task, retry_result, memory=memory, config=config)
+                result = retry_result
+                decision = retry_decision
+
+            history_entry = {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "task": task,
+                "result": result,
+                "decision": decision,
+            }
+            memory["history"].append(history_entry)
+            cycle_log["tasks"].append(history_entry)
+
+            if args.interactive:
+                print(json.dumps(history_entry, indent=2, ensure_ascii=True))
+
+        memory["meta"] = {
+            "cycles": cycle,
+            "last_status": "ok",
+            "updated_at": datetime.now(timezone.utc).isoformat(),
         }
 
-        validation = reviewer.validate(repo_path, impl.changed_files, config)
-        cycle_log["validation"] = {
-            "ok": validation.ok,
-            "checks": validation.checks,
-        }
+        # Keep memory bounded.
+        history_limit = int(((config.get("memory") or {}).get("max_history", 500)))
+        if history_limit > 0 and len(memory["history"]) > history_limit:
+            memory["history"] = memory["history"][-history_limit:]
 
-        committed = False
-        pushed = False
-        commit_sha = ""
-
-        if impl.ok and validation.ok and impl.changed_files:
-            git_ops.stage_files(repo_path, impl.changed_files)
-            ok, commit_out = git_ops.commit(repo_path, planner.make_commit_message(task))
-            committed = ok
-            commit_sha = commit_out if ok else ""
-            cycle_log["commit"] = {"ok": ok, "output": commit_out}
-
-            if ok and do_push:
-                push_ok, push_out = git_ops.push(repo_path, git_remote, git_branch)
-                pushed = push_ok
-                cycle_log["push"] = {"ok": push_ok, "output": push_out}
-        else:
-            cycle_log["commit"] = {"ok": False, "output": "Skipped due to implementation/validation status or no changed files."}
-
-        context["cycles"] = cycle
-        context["last_task"] = task.as_dict()
-        context["last_commit"] = commit_sha if committed else context.get("last_commit", "")
-        context["last_cycle_status"] = {
-            "implemented": impl.ok,
-            "validated": validation.ok,
-            "committed": committed,
-            "pushed": pushed,
-        }
-
-        save_context(memory_path, context)
+        save_memory(memory, memory_path)
         append_log(log_file, cycle_log)
 
         if max_cycles > 0 and cycle >= max_cycles:

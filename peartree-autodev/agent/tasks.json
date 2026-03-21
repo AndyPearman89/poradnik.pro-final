@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Repository status snapshot",
+    "type": "analyze",
+    "command": "git status --short"
+  },
+  {
+    "name": "Run service unit tests",
+    "type": "test",
+    "command": "php scripts/unit-test-services.php"
+  },
+  {
+    "name": "Run local module API tests",
+    "type": "test",
+    "command": "php scripts/unit-test-local-module-api.php"
+  }
+]

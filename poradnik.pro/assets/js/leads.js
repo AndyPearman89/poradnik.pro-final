@@ -4,6 +4,9 @@
         return;
     }
 
+    const experimentVariant = window.PoradnikPro?.config?.experiment?.conversionHeroV1 || 'A';
+    const experimentName = 'conversion_hero_v1';
+
     const status = form.querySelector('[data-pp-form-status]');
     const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -51,6 +54,8 @@
             status.textContent = 'Uzupelnij wszystkie wymagane pola.';
             window.PoradnikProTracking?.emit('lead_submit_failure', {
                 reason: 'validation_failed',
+                variant: experimentVariant,
+                experiment: experimentName,
             });
             return;
         }
@@ -63,12 +68,16 @@
             window.PoradnikProTracking?.emit('lead_submit_success', {
                 attempt,
                 hasLocation: payload.location.trim().length > 0,
+                variant: experimentVariant,
+                experiment: experimentName,
             });
             form.reset();
         } catch (error) {
             status.textContent = 'Nie udalo sie wyslac formularza. Sprobuj ponownie.';
             window.PoradnikProTracking?.emit('lead_submit_failure', {
                 reason: error?.name === 'AbortError' ? 'timeout' : 'request_failed',
+                variant: experimentVariant,
+                experiment: experimentName,
             });
         }
     });

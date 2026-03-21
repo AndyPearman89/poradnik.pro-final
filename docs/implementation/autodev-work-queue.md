@@ -22,3 +22,5 @@ Master tasklist: docs/implementation/final-project-tasklist.md
 - OPEN: TASK-C05 zrealizowac monitoring SLA partnerow + alerting.
 - DONE: TASK-E01 dodac testy ranking premium weighting (top 3 determinism + tie behavior).
 - DONE: TASK-E02 dodac walidacje disclosure + fallback CTA afiliacja->lead.
+- DONE: TASK-E03 dodac A/B CTA eksperyment + raport wyniku w KPI dashboard.
+- DONE: TASK-E04 dodac test ads density vs CTA visibility (mobile-first).

@@ -1361,6 +1361,72 @@ function testAnalyticsServiceTrackEndpointInvalidPayloadCountIntegration(): void
     echo "✓ AnalyticsService::ingestEvent invalid payload KPI integration\n";
 }
 
+function testAnalyticsServiceBuildSummaryExperimentReportContract(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildSummary');
+    $method->setAccessible(true);
+
+    $rows = [
+        '2026-03-25' => [
+            'revenue' => [
+                'lead_success' => 0,
+                'affiliate_clicks' => 0,
+                'estimated_lead_revenue' => 0.0,
+                'estimated_affiliate_revenue' => 0.0,
+            ],
+            'experiments' => [
+                'conversion_hero_v1' => [
+                    'A' => [
+                        'cta_clicks' => 10,
+                        'lead_success' => 2,
+                    ],
+                    'B' => [
+                        'cta_clicks' => 5,
+                        'lead_success' => 2,
+                    ],
+                ],
+            ],
+        ],
+        '2026-03-24' => [
+            'revenue' => [
+                'lead_success' => 0,
+                'affiliate_clicks' => 0,
+                'estimated_lead_revenue' => 0.0,
+                'estimated_affiliate_revenue' => 0.0,
+            ],
+            'experiments' => [
+                'conversion_hero_v1' => [
+                    'A' => [
+                        'cta_clicks' => 5,
+                        'lead_success' => 1,
+                    ],
+                ],
+            ],
+        ],
+    ];
+
+    $summary = (array) $method->invoke(null, $rows);
+    $report = (array) ($summary['experiment_report'] ?? []);
+
+    assertSame(2, count($report), 'buildSummary should expose two rows for A/B experiment report');
+
+    $rowA = $report[0] ?? [];
+    $rowB = $report[1] ?? [];
+
+    assertSame('conversion_hero_v1', (string) ($rowA['experiment'] ?? ''), 'experiment report should keep experiment key');
+    assertSame('A', (string) ($rowA['variant'] ?? ''), 'experiment report should sort variants alphabetically (A first)');
+    assertSame(15, (int) ($rowA['cta_clicks'] ?? 0), 'experiment report should aggregate CTA clicks across days for variant A');
+    assertSame(3, (int) ($rowA['lead_success'] ?? 0), 'experiment report should aggregate lead success across days for variant A');
+    assertSame(20.0, round((float) ($rowA['conversion_rate'] ?? 0), 2), 'experiment report should calculate conversion rate for variant A');
+
+    assertSame('B', (string) ($rowB['variant'] ?? ''), 'experiment report should include variant B');
+    assertSame(5, (int) ($rowB['cta_clicks'] ?? 0), 'experiment report should keep CTA clicks for variant B');
+    assertSame(2, (int) ($rowB['lead_success'] ?? 0), 'experiment report should keep lead success for variant B');
+    assertSame(40.0, round((float) ($rowB['conversion_rate'] ?? 0), 2), 'experiment report should calculate conversion rate for variant B');
+
+    echo "✓ AnalyticsService::buildSummary experiment report contract\n";
+}
+
 function testMonetizationServicePremiumWeightingTopThreeDeterminism(): void
 {
     global $mockPostMetaByPostId;
@@ -1559,6 +1625,7 @@ try {
     testAnalyticsServiceBuildSummaryTopSourcesTieDeterminism();
     testAnalyticsServiceTrackEndpointTopSourcesTieMultiDayIntegration();
     testAnalyticsServiceTrackEndpointInvalidPayloadCountIntegration();
+    testAnalyticsServiceBuildSummaryExperimentReportContract();
     testMonetizationServicePremiumWeightingTopThreeDeterminism();
     testMonetizationServiceTieBehaviorDeterministicByInputOrder();
     testMonetizationServiceResolveOfferCtaDirectUrlContract();

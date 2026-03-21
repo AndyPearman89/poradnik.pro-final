@@ -1,11 +1,20 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+if __package__ in (None, ""):
+    import sys
+
+    sys.path.append(str(Path(__file__).resolve().parent.parent))
+    from agent.copilot import ask_ai
+else:
+    from .copilot import ask_ai
 
 
 @dataclass
@@ -139,3 +148,119 @@ def make_commit_message(task: Task) -> str:
 def write_analysis_log(log_path: Path, payload: dict[str, Any]) -> None:
     log_path.parent.mkdir(parents=True, exist_ok=True)
     log_path.write_text(json.dumps(payload, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
+
+
+def _memory_tail(memory: dict[str, Any], limit: int = 5) -> str:
+    history = memory.get("history", [])
+    if not isinstance(history, list):
+        return "[]"
+    return json.dumps(history[-limit:], ensure_ascii=True)
+
+
+def _normalize_task(item: Any, index: int) -> dict[str, Any] | None:
+    if not isinstance(item, dict):
+        return None
+
+    name = str(item.get("name") or f"Task {index + 1}").strip()
+    task_type = str(item.get("type") or "analyze").strip().lower()
+    prompt = str(item.get("prompt") or "").strip()
+    command = str(item.get("command") or "").strip()
+
+    normalized = {
+        "name": name,
+        "type": task_type,
+        "prompt": prompt,
+        "command": command,
+    }
+    if "metadata" in item and isinstance(item["metadata"], dict):
+        normalized["metadata"] = item["metadata"]
+    return normalized
+
+
+def _parse_tasks_json(raw: str) -> list[dict[str, Any]]:
+    payload: Any
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        # Try to recover from LLM output wrapped in prose/code fences.
+        start = raw.find("[")
+        end = raw.rfind("]")
+        if start == -1 or end == -1 or end <= start:
+            return []
+        candidate = raw[start : end + 1]
+        try:
+            payload = json.loads(candidate)
+        except json.JSONDecodeError:
+            return []
+
+    if not isinstance(payload, list):
+        return []
+
+    tasks: list[dict[str, Any]] = []
+    for index, item in enumerate(payload):
+        normalized = _normalize_task(item, index)
+        if normalized is not None:
+            tasks.append(normalized)
+    return tasks
+
+
+def _load_fallback_tasks(tasks_file: Path) -> list[dict[str, Any]]:
+    if not tasks_file.exists():
+        return [
+            {
+                "name": "Fallback analyze",
+                "type": "analyze",
+                "command": "git status --short",
+                "prompt": "",
+            }
+        ]
+
+    try:
+        raw = tasks_file.read_text(encoding="utf-8")
+        data = json.loads(raw)
+        if isinstance(data, list):
+            tasks = []
+            for idx, item in enumerate(data):
+                normalized = _normalize_task(item, idx)
+                if normalized is not None:
+                    tasks.append(normalized)
+            if tasks:
+                return tasks
+    except Exception:
+        pass
+
+    return [
+        {
+            "name": "Fallback analyze",
+            "type": "analyze",
+            "command": "git status --short",
+            "prompt": "",
+        }
+    ]
+
+
+def plan(memory: dict[str, Any], repo_path: Path | None = None, config: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    cfg = config or {}
+    model = str(((cfg.get("ai") or {}).get("model") or os.environ.get("AUTODEV_MODEL") or "gpt-5.3-codex"))
+    base = Path(__file__).resolve().parent
+    tasks_file = base / "tasks.json"
+    fallback_tasks = _load_fallback_tasks(tasks_file)
+
+    context = _memory_tail(memory, limit=5)
+    repo_hint = str(repo_path or cfg.get("repo_path") or ".")
+
+    prompt = (
+        "You are a senior software planner for an autonomous coding agent.\n"
+        "Return ONLY strict JSON array with exactly 3 tasks.\n"
+        "Each task must include: name, type, and optionally prompt or command.\n"
+        "Allowed types: codegen, shell, test, analyze.\n"
+        "Prefer safe non-destructive tasks first.\n"
+        f"Repo: {repo_hint}\n"
+        f"Recent history: {context}\n"
+    )
+
+    response = ask_ai(prompt, model=model)
+    tasks = _parse_tasks_json(response)
+    if not tasks:
+        return fallback_tasks[:3]
+    return tasks[:3]

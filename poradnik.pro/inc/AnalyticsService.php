@@ -106,6 +106,7 @@ final class AnalyticsService
             $store[$day] = [
                 'events' => [],
                 'sources' => [],
+                'experiments' => [],
                 'quality' => [
                     'invalid_payload_count' => 0,
                 ],
@@ -134,6 +135,8 @@ final class AnalyticsService
         if ($eventName === 'unknown' || $source === 'unknown') {
             $store[$day]['quality']['invalid_payload_count'] = (int) ($store[$day]['quality']['invalid_payload_count'] ?? 0) + 1;
         }
+
+        self::ingestExperimentMetrics($store[$day], $eventName, $eventData);
 
         $store = self::pruneStore($store, (int) $config['retention_days']);
 
@@ -246,6 +249,31 @@ final class AnalyticsService
         }
 
         echo '</tbody></table>';
+
+        $experimentReport = (array) ($summary['experiment_report'] ?? []);
+        if ($experimentReport !== []) {
+            echo '<h2 style="margin-top:24px;">' . esc_html__('A/B CTA eksperyment (14 dni)', 'poradnik-pro') . '</h2>';
+            echo '<table class="widefat striped">';
+            echo '<thead><tr>';
+            echo '<th>' . esc_html__('Eksperyment', 'poradnik-pro') . '</th>';
+            echo '<th>' . esc_html__('Wariant', 'poradnik-pro') . '</th>';
+            echo '<th>' . esc_html__('CTA clicks', 'poradnik-pro') . '</th>';
+            echo '<th>' . esc_html__('Lead success', 'poradnik-pro') . '</th>';
+            echo '<th>' . esc_html__('CR (%)', 'poradnik-pro') . '</th>';
+            echo '</tr></thead><tbody>';
+
+            foreach ($experimentReport as $row) {
+                echo '<tr>';
+                echo '<td>' . esc_html((string) ($row['experiment'] ?? '')) . '</td>';
+                echo '<td>' . esc_html((string) ($row['variant'] ?? '')) . '</td>';
+                echo '<td>' . esc_html((string) ((int) ($row['cta_clicks'] ?? 0))) . '</td>';
+                echo '<td>' . esc_html((string) ((int) ($row['lead_success'] ?? 0))) . '</td>';
+                echo '<td>' . esc_html(number_format((float) ($row['conversion_rate'] ?? 0), 2, '.', '')) . '</td>';
+                echo '</tr>';
+            }
+
+            echo '</tbody></table>';
+        }
         echo '</div>';
     }
 
@@ -403,6 +431,7 @@ final class AnalyticsService
         $leadRevenue = 0.0;
         $affiliateRevenue = 0.0;
         $sourceTotals = [];
+        $experimentTotals = [];
 
         foreach ($rows as $data) {
             $revenue = (array) ($data['revenue'] ?? []);
@@ -418,6 +447,37 @@ final class AnalyticsService
             foreach ($sources as $source => $count) {
                 $normalizedSource = (string) $source;
                 $sourceTotals[$normalizedSource] = (int) ($sourceTotals[$normalizedSource] ?? 0) + self::normalizeSourceCount($count);
+            }
+
+            $experiments = (array) ($data['experiments'] ?? []);
+            foreach ($experiments as $experiment => $variants) {
+                $experimentKey = sanitize_key((string) $experiment);
+                if ($experimentKey === '') {
+                    continue;
+                }
+
+                if (! isset($experimentTotals[$experimentKey])) {
+                    $experimentTotals[$experimentKey] = [];
+                }
+
+                foreach ((array) $variants as $variant => $metrics) {
+                    $variantKey = strtoupper(sanitize_key((string) $variant));
+                    if ($variantKey === '') {
+                        continue;
+                    }
+
+                    $metricsArr = (array) $metrics;
+
+                    if (! isset($experimentTotals[$experimentKey][$variantKey])) {
+                        $experimentTotals[$experimentKey][$variantKey] = [
+                            'cta_clicks' => 0,
+                            'lead_success' => 0,
+                        ];
+                    }
+
+                    $experimentTotals[$experimentKey][$variantKey]['cta_clicks'] += max(0, (int) ($metricsArr['cta_clicks'] ?? 0));
+                    $experimentTotals[$experimentKey][$variantKey]['lead_success'] += max(0, (int) ($metricsArr['lead_success'] ?? 0));
+                }
             }
         }
 
@@ -438,7 +498,72 @@ final class AnalyticsService
             'invalid_payload_count' => $invalidPayloadCount,
             'estimated_total_revenue' => $leadRevenue + $affiliateRevenue,
             'top_sources' => array_slice($sourceTotals, 0, 10, true),
+            'experiment_report' => self::buildExperimentReport($experimentTotals),
         ];
+    }
+
+    private static function ingestExperimentMetrics(array &$dayStore, string $eventName, array $eventData): void
+    {
+        $experiment = sanitize_key((string) ($eventData['experiment'] ?? ''));
+        $variant = strtoupper(sanitize_key((string) ($eventData['variant'] ?? '')));
+        if ($experiment === '' || $variant === '') {
+            return;
+        }
+
+        if (! isset($dayStore['experiments']) || ! is_array($dayStore['experiments'])) {
+            $dayStore['experiments'] = [];
+        }
+
+        if (! isset($dayStore['experiments'][$experiment])) {
+            $dayStore['experiments'][$experiment] = [];
+        }
+
+        if (! isset($dayStore['experiments'][$experiment][$variant])) {
+            $dayStore['experiments'][$experiment][$variant] = [
+                'cta_clicks' => 0,
+                'lead_success' => 0,
+            ];
+        }
+
+        if ($eventName === 'cta_click') {
+            $dayStore['experiments'][$experiment][$variant]['cta_clicks']++;
+        }
+
+        if ($eventName === 'lead_submit_success') {
+            $dayStore['experiments'][$experiment][$variant]['lead_success']++;
+        }
+    }
+
+    private static function buildExperimentReport(array $experimentTotals): array
+    {
+        $rows = [];
+
+        foreach ($experimentTotals as $experiment => $variants) {
+            ksort($variants);
+            foreach ($variants as $variant => $metrics) {
+                $metricsArr = (array) $metrics;
+                $ctaClicks = max(0, (int) ($metricsArr['cta_clicks'] ?? 0));
+                $leadSuccess = max(0, (int) ($metricsArr['lead_success'] ?? 0));
+                $rows[] = [
+                    'experiment' => (string) $experiment,
+                    'variant' => (string) $variant,
+                    'cta_clicks' => $ctaClicks,
+                    'lead_success' => $leadSuccess,
+                    'conversion_rate' => $ctaClicks > 0 ? ($leadSuccess * 100) / $ctaClicks : 0.0,
+                ];
+            }
+        }
+
+        usort($rows, static function (array $left, array $right): int {
+            $expCmp = strcmp((string) ($left['experiment'] ?? ''), (string) ($right['experiment'] ?? ''));
+            if ($expCmp !== 0) {
+                return $expCmp;
+            }
+
+            return strcmp((string) ($left['variant'] ?? ''), (string) ($right['variant'] ?? ''));
+        });
+
+        return $rows;
     }
 
     private static function normalizeSourceCount(mixed $value): int
