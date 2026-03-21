@@ -353,7 +353,7 @@ Status legend:
 
 ### Faza F - Frontend, UX i wydajnosc
 
-- TASK-F01 [OPEN] Dodac testy interakcji search UX (intent mapping + debounce + empty state).
+- TASK-F01 [DONE] Dodac testy interakcji search UX (intent mapping + debounce + empty state).
 - TASK-F02 [OPEN] Dodac Lighthouse gate dla mobile (CWV budzet i trend tygodniowy).
 - TASK-F03 [OPEN] Dodac testy regresji JS bez jQuery (critical flows).
 - TASK-F04 [OPEN] Dodac visual smoke dla kluczowych template parts (hero, sections, CTA).
