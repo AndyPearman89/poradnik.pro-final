@@ -311,7 +311,7 @@ Status legend:
 
 ### Faza B - Tracking, KPI i jakosc danych
 
-- TASK-B01 [OPEN] Dodac E2E HTTP test dashboardu KPI dla tie-order `top_sources` na danych wielodniowych.
+- TASK-B01 [DONE] Dodac E2E HTTP test dashboardu KPI dla tie-order `top_sources` na danych wielodniowych.
 - TASK-B02 [OPEN] Dodac test kontraktu eksportu CSV dla wysokiego wolumenu (co najmniej 365 dni danych).
 - TASK-B03 [OPEN] Dodac walidacje schematu payload dla `/track` (allowlist eventow i source).
 - TASK-B04 [OPEN] Dodac testy regresji dla retention przy granicach 14 i 365 dni.
@@ -351,7 +351,7 @@ Status legend:
 
 ### Faza G - CI/CD, operacje i hardening
 
-- TASK-G01 [OPEN] Dodac pipeline nightly: smoke + unit + integration + load suite + raport.
+- TASK-G01 [DONE] Dodac pipeline nightly: smoke + unit + integration + load suite + raport.
 - TASK-G02 [OPEN] Dodac gate SLO dla peak scenario i trend p95/p99 tydzien-do-tygodnia.
 - TASK-G03 [OPEN] Dodac release runbook: preflight, deploy, rollback, post-deploy checks.
 - TASK-G04 [OPEN] Dodac policy branch protection + required checks dla `main`.

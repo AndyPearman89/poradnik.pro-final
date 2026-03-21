@@ -1,0 +1,64 @@
+# Final Project Tasklist
+
+## Status Legend
+
+- OPEN: zaplanowane
+- WIP: w realizacji
+- BLOCKED: zablokowane zaleznoscia
+- DONE: zakonczone i zwalidowane
+
+## Priorytet P0 (stabilnosc i release readiness)
+
+- [DONE] TASK-B01 - E2E HTTP dashboard KPI tie-order (multiday)
+- [DONE] TASK-G01 - nightly pipeline (smoke + unit + integration + load + raport)
+- [OPEN] TASK-G03 - release runbook (preflight/deploy/rollback/post-deploy)
+- [OPEN] TASK-G04 - branch protection i required checks dla main
+- [OPEN] TASK-G05 - checklist incydentowa /track i lead submit
+- [OPEN] TASK-A01 - idempotent bootstrap WP (CI + local)
+- [OPEN] TASK-A05 - hard gate runtime errors w FE smoke
+
+## Priorytet P1 (jakosc danych i konwersja)
+
+- [OPEN] TASK-B02 - test kontraktu export CSV dla 365 dni
+- [OPEN] TASK-B03 - walidacja schematu payload /track (allowlist)
+- [OPEN] TASK-B04 - regresja retention 14/365
+- [OPEN] TASK-B05 - metryka invalid payload count w KPI
+- [OPEN] TASK-C01 - E2E lead flow end-to-end
+- [OPEN] TASK-C02 - retry/backoff scenariusze API lead
+- [OPEN] TASK-C03 - routing multi/exclusive + testy kontraktu
+- [OPEN] TASK-C04 - antyspam honeypot + throttle integration tests
+- [OPEN] TASK-C05 - monitoring SLA partnerow + alerting
+
+## Priorytet P2 (SEO, UX, monetyzacja)
+
+- [OPEN] TASK-D01 - generator local pages (canonical/meta/schema)
+- [OPEN] TASK-D02 - structured data auto-test
+- [OPEN] TASK-D03 - internal linking depth controller
+- [OPEN] TASK-D04 - render tests single-question/archive-local/single-ranking
+- [OPEN] TASK-D05 - thin-content risk gate
+- [OPEN] TASK-E01 - ranking premium weighting tests
+- [OPEN] TASK-E02 - disclosure + affiliate->lead fallback validation
+- [OPEN] TASK-E03 - A/B CTA eksperyment + raport
+- [OPEN] TASK-E04 - ads density vs CTA visibility tests (mobile)
+- [OPEN] TASK-E05 - revenue mix dashboard per page type
+- [OPEN] TASK-F01 - search UX interaction tests
+- [OPEN] TASK-F02 - Lighthouse mobile gate + trend
+- [OPEN] TASK-F03 - JS no-jQuery regression suite
+- [OPEN] TASK-F04 - visual smoke for hero/sections/CTA
+- [OPEN] TASK-F05 - a11y audit forms/navigation
+
+## Priorytet P3 (domkniecie programu)
+
+- [OPEN] TASK-H01 - wszystkie taski A-G w DONE
+- [OPEN] TASK-H02 - 7 kolejnych dni zielonego pipeline
+- [OPEN] TASK-H03 - target metryk produkcyjnych (CR/EPC/RPM/CWV)
+- [OPEN] TASK-H04 - finalizacja dokumentacji i przekazanie runbookow
+- [OPEN] TASK-H05 - final release tag i freeze zmian krytycznych
+
+## Kolejnosc wykonania (najblizszy sprint)
+
+- 1) TASK-G03
+- 2) TASK-G04
+- 3) TASK-A01
+- 4) TASK-A05
+- 5) TASK-B02
