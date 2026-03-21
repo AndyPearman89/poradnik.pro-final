@@ -23,7 +23,7 @@
 - [DONE] TASK-B03 - walidacja schematu payload /track (allowlist)
 - [DONE] TASK-B04 - regresja retention 14/365
 - [DONE] TASK-B05 - metryka invalid payload count w KPI
-- [OPEN] TASK-C01 - E2E lead flow end-to-end
+- [DONE] TASK-C01 - E2E lead flow end-to-end
 - [OPEN] TASK-C02 - retry/backoff scenariusze API lead
 - [OPEN] TASK-C03 - routing multi/exclusive + testy kontraktu
 - [OPEN] TASK-C04 - antyspam honeypot + throttle integration tests
@@ -59,6 +59,6 @@
 
 - 1) TASK-G03
 - 2) TASK-G05
-- 3) TASK-C01
-- 4) TASK-C02
-- 5) TASK-C03
+- 3) TASK-C02
+- 4) TASK-C03
+- 5) TASK-C04

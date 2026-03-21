@@ -56,7 +56,8 @@
 - 2026-03-21: Zrealizowano TASK-B03: endpoint /track normalizuje eventName wg allowlist i filtruje payload do dozwolonych kluczy (schema allowlist).
 - 2026-03-21: Zrealizowano TASK-B04: dodano regresyjne testy granic retencji dla 14 i 365 dni (cutoff edge cases).
 - 2026-03-21: Zrealizowano TASK-B05: dodano metryke invalid_payload_count w KPI (ingest + summary + testy kontraktu).
-- Kolejny krok: zrealizowac TASK-C01 (E2E lead flow end-to-end).
+- 2026-03-21: Zrealizowano TASK-C01: rozszerzono test integracyjny lead flow do pelnego E2E (formularz home + kontrakty /leads: valid/duplicate/invalid/honeypot).
+- Kolejny krok: zrealizowac TASK-C02 (retry/backoff scenariusze API lead).
 
 ## Etap 1: Foundation (MVP techniczne)
 
