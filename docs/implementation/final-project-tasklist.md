@@ -20,7 +20,7 @@
 ## Priorytet P1 (jakosc danych i konwersja)
 
 - [DONE] TASK-B02 - test kontraktu export CSV dla 365 dni
-- [OPEN] TASK-B03 - walidacja schematu payload /track (allowlist)
+- [DONE] TASK-B03 - walidacja schematu payload /track (allowlist)
 - [OPEN] TASK-B04 - regresja retention 14/365
 - [OPEN] TASK-B05 - metryka invalid payload count w KPI
 - [OPEN] TASK-C01 - E2E lead flow end-to-end
@@ -59,6 +59,6 @@
 
 - 1) TASK-G03
 - 2) TASK-G05
-- 3) TASK-B03
-- 4) TASK-B04
-- 5) TASK-B05
+- 3) TASK-B04
+- 4) TASK-B05
+- 5) TASK-C01

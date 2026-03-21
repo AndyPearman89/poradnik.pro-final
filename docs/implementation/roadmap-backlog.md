@@ -53,7 +53,8 @@
 - 2026-03-21: Zrealizowano TASK-A01: dodano idempotentny skrypt bootstrap WP (scripts/bootstrap-wp.sh) i podlaczono go w CI oraz dokumentacji local.
 - 2026-03-21: Zrealizowano TASK-A05: smoke test FE uruchamiany w CI w trybie --strict-runtime, failuje na markerach runtime error w homepage i /track response.
 - 2026-03-21: Zrealizowano TASK-B02: dodano test kontraktu pelnego eksportu CSV dla 365 dni (1 header + 365 rows, granice dat).
-- Kolejny krok: zrealizowac TASK-B03 (walidacja schematu payload /track, allowlist).
+- 2026-03-21: Zrealizowano TASK-B03: endpoint /track normalizuje eventName wg allowlist i filtruje payload do dozwolonych kluczy (schema allowlist).
+- Kolejny krok: zrealizowac TASK-B04 (regresja retention 14/365).
 
 ## Etap 1: Foundation (MVP techniczne)
 

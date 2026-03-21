@@ -12,4 +12,5 @@ Master tasklist: docs/implementation/final-project-tasklist.md
 - DONE: TASK-A01 wdrozyc idempotent bootstrap WP dla CI i local.
 - DONE: TASK-A05 dodac twardy gate runtime errors w FE smoke.
 - DONE: TASK-B02 dodac test kontraktu export CSV dla 365 dni.
-- OPEN: TASK-B03 dodac walidacje schematu payload /track (allowlist).
+- DONE: TASK-B03 dodac walidacje schematu payload /track (allowlist).
+- OPEN: TASK-B04 dodac regresje retention 14/365.

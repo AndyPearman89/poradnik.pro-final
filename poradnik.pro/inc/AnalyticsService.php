@@ -22,6 +22,35 @@ final class AnalyticsService
         'top_source',
         'top_source_events',
     ];
+    private const ALLOWED_EVENT_NAMES = [
+        'attribution_landing',
+        'channel_deeplink_click',
+        'cta_click',
+        'lead_form_displayed',
+        'lead_form_submit_attempt',
+        'lead_submit_failure',
+        'lead_submit_success',
+        'scroll_depth',
+        'search_query',
+        'smoke_test',
+    ];
+    private const ALLOWED_PAYLOAD_KEYS = [
+        'source',
+        'channel',
+        'intent',
+        'term',
+        'query',
+        'location',
+        'placement',
+        'variant',
+        'experiment',
+        'device',
+        'action',
+        'result',
+        'provider',
+        'ts',
+        'path',
+    ];
 
     public static function registerRestRoutes(): void
     {
@@ -59,9 +88,15 @@ final class AnalyticsService
         header('X-Frame-Options: DENY');
 
         $payload = (array) $request->get_json_params();
-        $eventName = sanitize_key((string) ($payload['eventName'] ?? 'unknown'));
-        $eventData = (array) ($payload['payload'] ?? []);
-        $source = sanitize_key((string) ($eventData['source'] ?? $eventData['channel'] ?? 'unknown'));
+        $eventName = self::normalizeEventName((string) ($payload['eventName'] ?? 'unknown'));
+        $eventData = self::normalizePayload((array) ($payload['payload'] ?? []));
+        $source = sanitize_key((string) ($eventData['source'] ?? ''));
+        if ($source === '') {
+            $source = sanitize_key((string) ($eventData['channel'] ?? ''));
+        }
+        if ($source === '') {
+            $source = 'unknown';
+        }
         $config = self::config();
 
         $store = get_option(self::OPTION_KEY, []);
@@ -401,5 +436,38 @@ final class AnalyticsService
         }
 
         return max(0, (int) $value);
+    }
+
+    private static function normalizeEventName(string $eventName): string
+    {
+        $normalized = sanitize_key($eventName);
+        if ($normalized === '') {
+            return 'unknown';
+        }
+
+        return in_array($normalized, self::ALLOWED_EVENT_NAMES, true) ? $normalized : 'unknown';
+    }
+
+    private static function normalizePayload(array $payload): array
+    {
+        $normalized = [];
+
+        foreach (self::ALLOWED_PAYLOAD_KEYS as $key) {
+            if (! array_key_exists($key, $payload)) {
+                continue;
+            }
+
+            $value = $payload[$key];
+            if (is_string($value)) {
+                $normalized[$key] = sanitize_text_field($value);
+                continue;
+            }
+
+            if (is_int($value) || is_float($value) || is_bool($value)) {
+                $normalized[$key] = $value;
+            }
+        }
+
+        return $normalized;
     }
 }

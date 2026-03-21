@@ -427,6 +427,71 @@ function testAnalyticsServiceIngestEventHandlesInvalidPayload(): void
     echo "✓ AnalyticsService::ingestEvent invalid payload resilience\n";
 }
 
+function testAnalyticsServiceIngestEventUnknownEventAllowlistFallback(): void
+{
+    global $mockOptions;
+
+    $mockOptions = [
+        'poradnik_pro_kpi_store' => [],
+        'poradnik_pro_kpi_config' => [
+            'affiliate_value_per_click' => 1.5,
+            'lead_value_per_success' => 25.0,
+            'retention_days' => 30,
+        ],
+    ];
+
+    $response = AnalyticsService::ingestEvent(new WP_REST_Request([
+        'eventName' => 'custom_non_allowlisted_event',
+        'payload' => [
+            'source' => 'organic',
+        ],
+    ]));
+
+    assertSame(202, $response->get_status(), 'ingestEvent should accept non-allowlisted event via fallback');
+    assertSame('unknown', (string) ($response->get_data()['event'] ?? ''), 'non-allowlisted event should normalize to unknown');
+
+    $day = gmdate('Y-m-d');
+    $store = (array) ($mockOptions['poradnik_pro_kpi_store'] ?? []);
+    assertSame(1, (int) ($store[$day]['events']['unknown'] ?? 0), 'unknown fallback should increment unknown event bucket');
+
+    echo "✓ AnalyticsService::ingestEvent event allowlist fallback contract\n";
+}
+
+function testAnalyticsServiceIngestEventPayloadAllowlistContract(): void
+{
+    global $mockOptions;
+
+    $mockOptions = [
+        'poradnik_pro_kpi_store' => [],
+        'poradnik_pro_kpi_config' => [
+            'affiliate_value_per_click' => 1.5,
+            'lead_value_per_success' => 25.0,
+            'retention_days' => 30,
+        ],
+    ];
+
+    $response = AnalyticsService::ingestEvent(new WP_REST_Request([
+        'eventName' => 'cta_click',
+        'payload' => [
+            'channel' => 'YouTube Shorts',
+            'source' => '  ' ,
+            'forbidden' => 'drop-me',
+            'nested' => ['x' => 1],
+        ],
+    ]));
+
+    assertSame(202, $response->get_status(), 'ingestEvent should accept payload with extra keys');
+
+    $day = gmdate('Y-m-d');
+    $store = (array) ($mockOptions['poradnik_pro_kpi_store'] ?? []);
+
+    assertSame(1, (int) ($store[$day]['events']['cta_click'] ?? 0), 'allowlisted event should be counted as-is');
+    assertSame(1, (int) ($store[$day]['sources']['youtubeshorts'] ?? 0), 'source should fallback to normalized allowlisted channel value when source is blank');
+    assertSame(0, (int) ($store[$day]['sources']['drop-me'] ?? 0), 'non-allowlisted payload keys should not become tracking sources');
+
+    echo "✓ AnalyticsService::ingestEvent payload allowlist contract\n";
+}
+
 function testAnalyticsServiceRegistersPermissionCallback(): void
 {
     global $capturedRestRouteRegistration;
@@ -1183,6 +1248,8 @@ try {
     testLeadServiceHandlesApiFailure();
     testAnalyticsServiceIngestEventRevenueMath();
     testAnalyticsServiceIngestEventHandlesInvalidPayload();
+    testAnalyticsServiceIngestEventUnknownEventAllowlistFallback();
+    testAnalyticsServiceIngestEventPayloadAllowlistContract();
     testAnalyticsServiceRegistersPermissionCallback();
     testAnalyticsServiceSetsSecurityHeadersContract();
     testAnalyticsServiceExportHeadersContract();
