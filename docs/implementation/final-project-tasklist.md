@@ -31,11 +31,7 @@
 
 ## Priorytet P2 (SEO, UX, monetyzacja)
 
-- [DONE] TASK-D01 - generator local pages (canonical/meta/schema)
-- [DONE] TASK-D02 - structured data auto-test
-- [DONE] TASK-D03 - internal linking depth controller
-- [OPEN] TASK-D04 - render tests single-question/archive-local/single-ranking
-- [OPEN] TASK-D05 - thin-content risk gate
+ [DONE] TASK-D04 - render tests single-question/archive-local/single-ranking
 - [OPEN] TASK-E01 - ranking premium weighting tests
 - [OPEN] TASK-E02 - disclosure + affiliate->lead fallback validation
 - [OPEN] TASK-E03 - A/B CTA eksperyment + raport
