@@ -57,7 +57,12 @@
 - 2026-03-21: Zrealizowano TASK-B04: dodano regresyjne testy granic retencji dla 14 i 365 dni (cutoff edge cases).
 - 2026-03-21: Zrealizowano TASK-B05: dodano metryke invalid_payload_count w KPI (ingest + summary + testy kontraktu).
 - 2026-03-21: Zrealizowano TASK-C01: rozszerzono test integracyjny lead flow do pelnego E2E (formularz home + kontrakty /leads: valid/duplicate/invalid/honeypot).
-- Kolejny krok: zrealizowac TASK-C02 (retry/backoff scenariusze API lead).
+- 2026-03-21: Zrealizowano TASK-F03: dodano skrypt scripts/integration-test-js-no-jquery.mjs (kontrakt no-jQuery dla HTML/JS/enqueue) i podlaczono do workflow nightly oraz PR.
+- 2026-03-21: Zrealizowano TASK-F04: dodano visual smoke test homepage (hero/sections/CTA/sticky CTA/style.css) w scripts/integration-test-visual-smoke-home.mjs i podlaczono do workflow nightly oraz PR.
+- 2026-03-21: Zrealizowano TASK-F05: dodano a11y audit forms/navigation (skip link, nav landmark, kontrakty label/aria-live) w scripts/integration-test-a11y-forms-nav.mjs oraz podlaczono do workflow nightly i PR.
+- 2026-03-21: Zrealizowano TASK-H04: finalizacja dokumentacji i przekazanie operacyjne w docs/implementation/final-handover-runbook.md.
+- 2026-03-21: TASK-H01 oznaczono jako BLOCKED do czasu recznej realizacji TASK-G04 (branch protection/required checks poza repo).
+- Kolejny krok: realizacja TASK-H02 (7 kolejnych dni zielonego pipeline).
 
 ## Etap 1: Foundation (MVP techniczne)
 

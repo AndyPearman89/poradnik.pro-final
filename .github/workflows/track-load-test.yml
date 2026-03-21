@@ -84,6 +84,15 @@ jobs:
       - name: Run lead form integration test
         run: node scripts/integration-test-lead-form.mjs --base http://127.0.0.1:8080
 
+      - name: Run JS no-jQuery regression suite
+        run: node scripts/integration-test-js-no-jquery.mjs --base http://127.0.0.1:8080
+
+      - name: Run visual smoke test for home hero/sections/CTA
+        run: node scripts/integration-test-visual-smoke-home.mjs --base http://127.0.0.1:8080
+
+      - name: Run a11y forms/navigation audit
+        run: node scripts/integration-test-a11y-forms-nav.mjs --base http://127.0.0.1:8080
+
       - name: Run KPI dashboard E2E HTTP test
         run: node scripts/integration-test-kpi-dashboard.mjs --base http://127.0.0.1:8080 --admin-user admin --admin-password "admin123!"
 

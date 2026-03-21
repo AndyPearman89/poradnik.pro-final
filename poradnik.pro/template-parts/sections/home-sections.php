@@ -82,18 +82,18 @@ if ($specialistItems === []) {
                 </ul>
             </div>
 
-            <form class="pp-card pp-form" data-pp-lead-form>
+            <form class="pp-card pp-form" data-pp-lead-form aria-label="<?php esc_attr_e('Formularz kontaktu ze specjalista', 'poradnik-pro'); ?>">
                 <label for="lead-name"><?php esc_html_e('Imie i nazwisko', 'poradnik-pro'); ?></label>
-                <input id="lead-name" name="name" required>
+                <input id="lead-name" name="name" type="text" autocomplete="name" required>
 
                 <label for="lead-contact"><?php esc_html_e('Email lub telefon', 'poradnik-pro'); ?></label>
-                <input id="lead-contact" name="email_or_phone" required>
+                <input id="lead-contact" name="email_or_phone" type="text" autocomplete="email" required>
 
                 <label for="lead-problem"><?php esc_html_e('Problem', 'poradnik-pro'); ?></label>
                 <textarea id="lead-problem" name="problem" required></textarea>
 
                 <label for="lead-location"><?php esc_html_e('Lokalizacja', 'poradnik-pro'); ?></label>
-                <input id="lead-location" name="location" required>
+                <input id="lead-location" name="location" type="text" autocomplete="address-level2" required>
 
                 <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;">
 

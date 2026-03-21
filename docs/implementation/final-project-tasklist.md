@@ -43,15 +43,15 @@
 - [DONE] TASK-E05 - revenue mix dashboard per page type
 - [DONE] TASK-F01 - search UX interaction tests
 - [DONE] TASK-F02 - Lighthouse mobile gate + trend
-- [OPEN] TASK-F03 - JS no-jQuery regression suite
-- [OPEN] TASK-F04 - visual smoke for hero/sections/CTA
-- [OPEN] TASK-F05 - a11y audit forms/navigation
+- [DONE] TASK-F03 - JS no-jQuery regression suite
+- [DONE] TASK-F04 - visual smoke for hero/sections/CTA
+- [DONE] TASK-F05 - a11y audit forms/navigation
 ## Priorytet P3 (domkniecie programu)
 
-- [OPEN] TASK-H01 - wszystkie taski A-G w DONE
+- [BLOCKED] TASK-H01 - wszystkie taski A-G w DONE (blokada: TASK-G04 branch protection)
 - [OPEN] TASK-H02 - 7 kolejnych dni zielonego pipeline
 - [OPEN] TASK-H03 - target metryk produkcyjnych (CR/EPC/RPM/CWV)
-- [OPEN] TASK-H04 - finalizacja dokumentacji i przekazanie runbookow
+- [DONE] TASK-H04 - finalizacja dokumentacji i przekazanie runbookow
 - [OPEN] TASK-H05 - final release tag i freeze zmian krytycznych
 
 ## Kolejnosc wykonania (najblizszy sprint)

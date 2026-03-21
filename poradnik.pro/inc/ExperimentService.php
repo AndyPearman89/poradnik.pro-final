@@ -18,13 +18,15 @@ final class ExperimentService
         $index = $hash % max(1, count($variants));
         $variant = (string) ($variants[$index] ?? 'A');
 
-        setcookie($cookieName, $variant, [
-            'expires' => time() + (DAY_IN_SECONDS * 30),
-            'path' => '/',
-            'secure' => is_ssl(),
-            'httponly' => false,
-            'samesite' => 'Lax',
-        ]);
+        if (! headers_sent()) {
+            setcookie($cookieName, $variant, [
+                'expires' => time() + (DAY_IN_SECONDS * 30),
+                'path' => '/',
+                'secure' => is_ssl(),
+                'httponly' => false,
+                'samesite' => 'Lax',
+            ]);
+        }
 
         return $variant;
     }
