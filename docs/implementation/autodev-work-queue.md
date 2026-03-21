@@ -26,3 +26,4 @@ Master tasklist: docs/implementation/final-project-tasklist.md
 - DONE: TASK-E04 dodac test ads density vs CTA visibility (mobile-first).
 - DONE: TASK-E05 dodac revenue mix dashboard per page type.
 - DONE: TASK-F01 dodac testy interakcji search UX (intent mapping + debounce + empty state).
+- DONE: TASK-F02 dodac Lighthouse mobile gate + trend tygodniowy (z fallback probe).

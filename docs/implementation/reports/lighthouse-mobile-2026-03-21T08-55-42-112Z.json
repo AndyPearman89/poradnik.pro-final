@@ -1,0 +1,17 @@
+{
+  "mode": "fallback",
+  "status": 200,
+  "hints": {
+    "durationMs": 388,
+    "scriptCount": 9,
+    "htmlKb": 21.24
+  },
+  "metrics": {
+    "performanceScore": 100,
+    "lcpMs": 1290,
+    "cls": 0.03,
+    "tbtMs": 186,
+    "fcpMs": 600,
+    "siMs": 1000
+  }
+}

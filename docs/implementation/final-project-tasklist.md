@@ -42,7 +42,7 @@
 - [DONE] TASK-E04 - ads density vs CTA visibility tests (mobile)
 - [DONE] TASK-E05 - revenue mix dashboard per page type
 - [DONE] TASK-F01 - search UX interaction tests
-- [OPEN] TASK-F02 - Lighthouse mobile gate + trend
+- [DONE] TASK-F02 - Lighthouse mobile gate + trend
 - [OPEN] TASK-F03 - JS no-jQuery regression suite
 - [OPEN] TASK-F04 - visual smoke for hero/sections/CTA
 - [OPEN] TASK-F05 - a11y audit forms/navigation

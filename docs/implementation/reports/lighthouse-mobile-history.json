@@ -1,0 +1,49 @@
+[
+  {
+    "timestamp": "2026-03-21T08:55:45.156Z",
+    "url": "http://127.0.0.1:8080/",
+    "mode": "fallback",
+    "metrics": {
+      "performanceScore": 100,
+      "lcpMs": 1290,
+      "cls": 0.03,
+      "tbtMs": 186,
+      "fcpMs": 600,
+      "siMs": 1000
+    },
+    "gate": {
+      "checks": [
+        {
+          "name": "performance_score",
+          "ok": true,
+          "actual": 100,
+          "budget": ">= 70"
+        },
+        {
+          "name": "lcp_ms",
+          "ok": true,
+          "actual": 1290,
+          "budget": "<= 4000"
+        },
+        {
+          "name": "cls",
+          "ok": true,
+          "actual": 0.03,
+          "budget": "<= 0.15"
+        },
+        {
+          "name": "tbt_ms",
+          "ok": true,
+          "actual": 186,
+          "budget": "<= 600"
+        }
+      ],
+      "ok": true
+    },
+    "fallbackHints": {
+      "durationMs": 388,
+      "scriptCount": 9,
+      "htmlKb": 21.24
+    }
+  }
+]
