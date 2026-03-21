@@ -9,4 +9,3 @@ Master tasklist: docs/implementation/final-project-tasklist.md
 - DONE: TASK-G03 dopisac release runbook: preflight, deploy, rollback, post-deploy checks.
 - BLOCKED: TASK-G04 wymaga ustawien branch protection i required checks bezposrednio w GitHub repo settings.
 - OPEN: TASK-G05 przygotowac checklist incydentowa dla awarii /track i lead submit.
-- BLOCKED: TASK-G05 wymaga ustawien poza repo (GitHub/infra).

@@ -49,7 +49,8 @@
 - 2026-03-21: Zrealizowano TASK-G01: dodano nightly pipeline (.github/workflows/nightly-quality.yml) z sekwencja smoke + unit + integration + load + raport.
 - 2026-03-21: Zrealizowano TASK-G03: dodano release runbook (preflight/deploy/rollback/post-deploy) w docs/implementation/release-runbook.md.
 - 2026-03-21: TASK-G04 oznaczono jako BLOCKED (wymaga recznej konfiguracji GitHub branch protection poza repo code).
-- Kolejny krok: zrealizowac TASK-G05 (checklista incydentowa dla awarii /track i lead submit).
+- 2026-03-21: Zrealizowano TASK-G05: dodano checkliste incydentowa dla awarii /track i lead submit w docs/implementation/incident-response-checklist.md.
+- Kolejny krok: zrealizowac TASK-A01 (idempotent bootstrap WP w CI i local).
 
 ## Etap 1: Foundation (MVP techniczne)
 

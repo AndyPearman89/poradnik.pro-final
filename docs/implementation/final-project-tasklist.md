@@ -13,7 +13,7 @@
 - [DONE] TASK-G01 - nightly pipeline (smoke + unit + integration + load + raport)
 - [DONE] TASK-G03 - release runbook (preflight/deploy/rollback/post-deploy)
 - [BLOCKED] TASK-G04 - branch protection i required checks dla main
-- [BLOCKED] TASK-G05 - checklist incydentowa /track i lead submit
+- [DONE] TASK-G05 - checklist incydentowa /track i lead submit
 - [OPEN] TASK-A01 - idempotent bootstrap WP (CI + local)
 - [OPEN] TASK-A05 - hard gate runtime errors w FE smoke
 
