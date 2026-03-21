@@ -70,3 +70,16 @@ Uruchomienie kontenerowe (loop 24/7):
 ```bash
 docker compose -f peartree-autodev/docker-compose.yml up -d --build
 ```
+
+## PEARTREE AUTODEV HYBRID (Python + Copilot) v1.0
+
+Pol-autonomiczny tryb pracy (task -> implementacja w Copilot -> commit/push):
+
+```bash
+cd peartree-autodev/hybrid
+python runner.py
+```
+
+Szczegoly i instrukcja promptu Copilot:
+
+- peartree-autodev/hybrid/README.md
