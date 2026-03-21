@@ -289,3 +289,76 @@ Kryteria odbioru:
 
 - CR lead i wartosc leada na poziomie produkcyjnym
 - stabilny flow formularz -> routing -> odpowiedzi
+
+## Taski wykonawcze do konca projektu
+
+Status legend:
+
+- OPEN: task zaplanowany
+- WIP: task w realizacji
+- BLOCKED: task zablokowany zaleznoscia
+- DONE: task zakonczony i zwalidowany
+
+### Faza A - Platforma i niezawodnosc
+
+- TASK-A01 [OPEN] Zrobic bootstrap WP bezbledny w CI i local (idempotent install + activate theme + rewrite flush).
+- TASK-A02 [OPEN] Dodac healthcheck endpointu `/wp-json/peartree/v1/track` do smoke suite.
+- TASK-A03 [OPEN] Dodac watchdog log rotation dla `peartree-autodev/logs/*.jsonl`.
+- TASK-A04 [OPEN] Ujednolicic zmienne srodowiskowe `.env` vs CI secrets i opisac fallback.
+- TASK-A05 [OPEN] Dodac twardy gate dla runtime errors w FE smoke (status!=200 => fail pipeline).
+
+### Faza B - Tracking, KPI i jakosc danych
+
+- TASK-B01 [OPEN] Dodac E2E HTTP test dashboardu KPI dla tie-order `top_sources` na danych wielodniowych.
+- TASK-B02 [OPEN] Dodac test kontraktu eksportu CSV dla wysokiego wolumenu (co najmniej 365 dni danych).
+- TASK-B03 [OPEN] Dodac walidacje schematu payload dla `/track` (allowlist eventow i source).
+- TASK-B04 [OPEN] Dodac testy regresji dla retention przy granicach 14 i 365 dni.
+- TASK-B05 [OPEN] Dodac metryke blednych eventow do KPI (invalid payload count).
+
+### Faza C - Lead engine i routing
+
+- TASK-C01 [OPEN] Dodac E2E test lead flow: display -> submit -> success -> attribution.
+- TASK-C02 [OPEN] Dodac scenariusze retry/backoff dla bledow API lead endpoint.
+- TASK-C03 [OPEN] Dodac routing rule set (multi/exclusive) z testami kontraktu.
+- TASK-C04 [OPEN] Dodac walidacje antyspam (honeypot + throttle) z asercjami w testach integracyjnych.
+- TASK-C05 [OPEN] Dodac monitoring SLA odpowiedzi partnerow i alert przy degradacji.
+
+### Faza D - SEO i programmatic scale
+
+- TASK-D01 [OPEN] Dodac generator szablonow local pages z kontrola canonical/meta/schema.
+- TASK-D02 [OPEN] Dodac automatyczny test structured data (schema required fields).
+- TASK-D03 [OPEN] Dodac kontroler internal linking depth (minimalna liczba linkow wewnetrznych/strone).
+- TASK-D04 [OPEN] Dodac testy renderu dla `single-question`, `archive-local`, `single-ranking`.
+- TASK-D05 [OPEN] Dodac bramke "thin-content risk" (minimalna dlugosc i sekcje obowiazkowe).
+
+### Faza E - Monetyzacja i eksperymenty
+
+- TASK-E01 [OPEN] Dodac testy ranking premium weighting (top 3 determinism + tie behavior).
+- TASK-E02 [OPEN] Dodac walidacje disclosure i fallback CTA afiliacja->lead.
+- TASK-E03 [OPEN] Dodac eksperyment A/B dla sekcji CTA z event contract i raportem wyniku.
+- TASK-E04 [OPEN] Dodac testy balansu ads density vs CTA visibility (mobile first).
+- TASK-E05 [OPEN] Dodac dashboard mix revenue per page type (ads/affiliate/lead).
+
+### Faza F - Frontend, UX i wydajnosc
+
+- TASK-F01 [OPEN] Dodac testy interakcji search UX (intent mapping + debounce + empty state).
+- TASK-F02 [OPEN] Dodac Lighthouse gate dla mobile (CWV budzet i trend tygodniowy).
+- TASK-F03 [OPEN] Dodac testy regresji JS bez jQuery (critical flows).
+- TASK-F04 [OPEN] Dodac visual smoke dla kluczowych template parts (hero, sections, CTA).
+- TASK-F05 [OPEN] Dodac audyt a11y dla formularzy i nawigacji mobilnej.
+
+### Faza G - CI/CD, operacje i hardening
+
+- TASK-G01 [OPEN] Dodac pipeline nightly: smoke + unit + integration + load suite + raport.
+- TASK-G02 [OPEN] Dodac gate SLO dla peak scenario i trend p95/p99 tydzien-do-tygodnia.
+- TASK-G03 [OPEN] Dodac release runbook: preflight, deploy, rollback, post-deploy checks.
+- TASK-G04 [OPEN] Dodac policy branch protection + required checks dla `main`.
+- TASK-G05 [OPEN] Dodac checklist incydentowa dla awarii `/track` i lead submit.
+
+### Faza H - Domkniecie projektu (Definition of Done)
+
+- TASK-H01 [OPEN] Zakonczyc wszystkie taski A-G ze statusem DONE.
+- TASK-H02 [OPEN] Potwierdzic zielony pipeline przez 7 kolejnych dni.
+- TASK-H03 [OPEN] Potwierdzic metryki produkcyjne: CR lead, EPC, RPM, CWV w targetach.
+- TASK-H04 [OPEN] Zamknac dokumentacje operacyjna i przekazac runbooki do utrzymania.
+- TASK-H05 [OPEN] Oznaczyc release finalny i zrobic freeze zmian krytycznych.
