@@ -66,8 +66,10 @@
 
     document.querySelectorAll('[data-pp-affiliate]').forEach((link) => {
         link.addEventListener('click', () => {
+            const mode = link.getAttribute('data-pp-affiliate-mode') || 'direct';
             window.PoradnikProTracking?.emit('cta_click', {
-                source: 'affiliate',
+                source: mode === 'fallback' ? 'affiliate_fallback_lead' : 'affiliate',
+                mode,
                 label: link.textContent?.trim() || 'affiliate_cta',
                 href: link.getAttribute('href') || '',
             });

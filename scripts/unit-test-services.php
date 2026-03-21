@@ -18,6 +18,8 @@ $mockOptions = [];
 $capturedRestRouteRegistration = null;
 $mockCanManageOptions = true;
 $mockNonceVerification = true;
+$mockPostMetaByPostId = [];
+$mockCurrentPostId = 0;
 
 if (! function_exists('__')) {
     function __(string $text, string $domain = ''): string
@@ -53,6 +55,27 @@ if (! function_exists('get_option')) {
     {
         global $mockOptions;
         return array_key_exists($name, $mockOptions) ? $mockOptions[$name] : $default;
+    }
+}
+
+if (! function_exists('get_the_ID')) {
+    function get_the_ID(): int
+    {
+        global $mockCurrentPostId;
+        return (int) $mockCurrentPostId;
+    }
+}
+
+if (! function_exists('get_post_meta')) {
+    function get_post_meta(int $postId, string $key, bool $single = false): mixed
+    {
+        global $mockPostMetaByPostId;
+
+        if (! isset($mockPostMetaByPostId[$postId]) || ! array_key_exists($key, $mockPostMetaByPostId[$postId])) {
+            return $single ? '' : [];
+        }
+
+        return $mockPostMetaByPostId[$postId][$key];
     }
 }
 
@@ -210,9 +233,11 @@ if (! class_exists('WP_REST_Response')) {
 require_once __DIR__ . '/../poradnik.pro/inc/ApiClient.php';
 require_once __DIR__ . '/../poradnik.pro/inc/LeadService.php';
 require_once __DIR__ . '/../poradnik.pro/inc/AnalyticsService.php';
+require_once __DIR__ . '/../poradnik.pro/inc/MonetizationService.php';
 
 use PoradnikPro\AnalyticsService;
 use PoradnikPro\LeadService;
+use PoradnikPro\MonetizationService;
 
 function assertTrue(bool $condition, string $message): void
 {
@@ -1336,6 +1361,170 @@ function testAnalyticsServiceTrackEndpointInvalidPayloadCountIntegration(): void
     echo "✓ AnalyticsService::ingestEvent invalid payload KPI integration\n";
 }
 
+function testMonetizationServicePremiumWeightingTopThreeDeterminism(): void
+{
+    global $mockPostMetaByPostId;
+
+    $postId = 9901;
+    $mockPostMetaByPostId = [
+        $postId => [
+            'pp_offers_json' => json_encode([
+                [
+                    'name' => 'Offer Low',
+                    'rating' => 4.0,
+                    'epc' => 1.0,
+                    'premium' => false,
+                ],
+                [
+                    'name' => 'Offer Premium A',
+                    'rating' => 4.6,
+                    'epc' => 3.2,
+                    'premium' => true,
+                ],
+                [
+                    'name' => 'Offer Premium B',
+                    'rating' => 4.5,
+                    'epc' => 3.1,
+                    'premium' => true,
+                ],
+                [
+                    'name' => 'Offer NonPremium Mid',
+                    'rating' => 4.4,
+                    'epc' => 3.0,
+                    'premium' => false,
+                ],
+                [
+                    'name' => 'Offer Premium C',
+                    'rating' => 4.3,
+                    'epc' => 3.3,
+                    'premium' => true,
+                ],
+            ], JSON_UNESCAPED_UNICODE),
+        ],
+    ];
+
+    $offers = MonetizationService::rankedOffers($postId);
+
+    assertSame(5, count($offers), 'rankedOffers should return all valid offers');
+    assertSame(1, (int) ($offers[0]['rank'] ?? 0), 'top offer should have rank=1');
+    assertSame(2, (int) ($offers[1]['rank'] ?? 0), 'second offer should have rank=2');
+    assertSame(3, (int) ($offers[2]['rank'] ?? 0), 'third offer should have rank=3');
+    assertSame('PREMIUM+', (string) ($offers[0]['badge'] ?? ''), 'top 1 should get PREMIUM+ badge');
+    assertSame('PREMIUM+', (string) ($offers[1]['badge'] ?? ''), 'top 2 should get PREMIUM+ badge');
+    assertSame('PREMIUM+', (string) ($offers[2]['badge'] ?? ''), 'top 3 should get PREMIUM+ badge');
+    assertSame('PREMIUM', (string) ($offers[3]['badge'] ?? ''), 'offer outside top 3 should get PREMIUM badge');
+
+    $topThreeNames = array_map(
+        static fn (array $offer): string => (string) ($offer['name'] ?? ''),
+        array_slice($offers, 0, 3)
+    );
+    assertSame(
+        ['Offer Premium A', 'Offer Premium B', 'Offer Premium C'],
+        $topThreeNames,
+        'premium weighting should deterministically promote premium offers into top 3 for this fixture'
+    );
+
+    echo "✓ MonetizationService::rankedOffers premium weighting top-3 determinism\n";
+}
+
+function testMonetizationServiceTieBehaviorDeterministicByInputOrder(): void
+{
+    global $mockPostMetaByPostId;
+
+    $postId = 9902;
+    $mockPostMetaByPostId = [
+        $postId => [
+            'pp_offers_json' => json_encode([
+                [
+                    'name' => 'Tie Offer A',
+                    'rating' => 4.5,
+                    'epc' => 3.0,
+                    'premium' => false,
+                ],
+                [
+                    'name' => 'Tie Offer B',
+                    'rating' => 4.5,
+                    'epc' => 3.0,
+                    'premium' => false,
+                ],
+                [
+                    'name' => 'Tie Offer C',
+                    'rating' => 4.5,
+                    'epc' => 3.0,
+                    'premium' => false,
+                ],
+                [
+                    'name' => 'Tie Offer D',
+                    'rating' => 4.5,
+                    'epc' => 3.0,
+                    'premium' => false,
+                ],
+            ], JSON_UNESCAPED_UNICODE),
+        ],
+    ];
+
+    $offers = MonetizationService::rankedOffers($postId);
+
+    $orderedNames = array_map(
+        static fn (array $offer): string => (string) ($offer['name'] ?? ''),
+        $offers
+    );
+    assertSame(
+        ['Tie Offer A', 'Tie Offer B', 'Tie Offer C', 'Tie Offer D'],
+        $orderedNames,
+        'rankedOffers should keep deterministic input order when score/rating/epc/premium are tied'
+    );
+
+    $scores = array_map(static fn (array $offer): float => (float) ($offer['score'] ?? -1), $offers);
+    assertTrue($scores[0] > $scores[1], 'position boost should still differentiate earlier tied offers from later ones');
+
+    echo "✓ MonetizationService::rankedOffers tie behavior determinism\n";
+}
+
+function testMonetizationServiceResolveOfferCtaDirectUrlContract(): void
+{
+    $result = MonetizationService::resolveOfferCta([
+        'affiliate_url' => 'https://partner.example.com/offer-1',
+    ], '/uslugi/');
+
+    assertSame('https://partner.example.com/offer-1', (string) ($result['url'] ?? ''), 'resolveOfferCta should keep valid direct affiliate URL');
+    assertSame(false, (bool) ($result['is_fallback'] ?? true), 'resolveOfferCta should mark valid URL as non-fallback');
+
+    echo "✓ MonetizationService::resolveOfferCta direct-url contract\n";
+}
+
+function testMonetizationServiceResolveOfferCtaFallbackContract(): void
+{
+    $fallbackUrl = '/uslugi/';
+
+    $empty = MonetizationService::resolveOfferCta([
+        'affiliate_url' => '',
+    ], $fallbackUrl);
+
+    $hash = MonetizationService::resolveOfferCta([
+        'affiliate_url' => '#',
+    ], $fallbackUrl);
+
+    assertSame($fallbackUrl, (string) ($empty['url'] ?? ''), 'resolveOfferCta should fallback to lead URL when affiliate_url is empty');
+    assertSame(true, (bool) ($empty['is_fallback'] ?? false), 'resolveOfferCta should mark empty affiliate URL as fallback');
+    assertSame($fallbackUrl, (string) ($hash['url'] ?? ''), 'resolveOfferCta should fallback to lead URL when affiliate_url is hash placeholder');
+    assertSame(true, (bool) ($hash['is_fallback'] ?? false), 'resolveOfferCta should mark hash affiliate URL as fallback');
+
+    echo "✓ MonetizationService::resolveOfferCta affiliate->lead fallback contract\n";
+}
+
+function testAffiliateDisclosureTemplateContract(): void
+{
+    $templatePath = __DIR__ . '/../poradnik.pro/template-parts/components/affiliate-disclosure.php';
+    $contents = (string) file_get_contents($templatePath);
+
+    assertTrue($contents !== '', 'affiliate disclosure template should be readable');
+    assertTrue(str_contains($contents, 'data-pp-affiliate-disclosure'), 'affiliate disclosure template should expose marker data-pp-affiliate-disclosure');
+    assertTrue(str_contains($contents, 'Disclosure:'), 'affiliate disclosure template should keep disclosure text prefix');
+
+    echo "✓ Affiliate disclosure template contract\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -1370,6 +1559,11 @@ try {
     testAnalyticsServiceBuildSummaryTopSourcesTieDeterminism();
     testAnalyticsServiceTrackEndpointTopSourcesTieMultiDayIntegration();
     testAnalyticsServiceTrackEndpointInvalidPayloadCountIntegration();
+    testMonetizationServicePremiumWeightingTopThreeDeterminism();
+    testMonetizationServiceTieBehaviorDeterministicByInputOrder();
+    testMonetizationServiceResolveOfferCtaDirectUrlContract();
+    testMonetizationServiceResolveOfferCtaFallbackContract();
+    testAffiliateDisclosureTemplateContract();
 
     echo "\nOverall: PASS\n";
     exit(0);

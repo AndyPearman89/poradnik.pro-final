@@ -36,8 +36,8 @@
 - [DONE] TASK-D03 - internal linking depth controller
 - [DONE] TASK-D04 - render tests single-question/archive-local/single-ranking
 - [DONE] TASK-D05 - thin-content risk gate
-- [OPEN] TASK-E01 - ranking premium weighting tests
-- [OPEN] TASK-E02 - disclosure + affiliate->lead fallback validation
+- [DONE] TASK-E01 - ranking premium weighting tests
+- [DONE] TASK-E02 - disclosure + affiliate->lead fallback validation
 - [OPEN] TASK-E03 - A/B CTA eksperyment + raport
 - [OPEN] TASK-E04 - ads density vs CTA visibility tests (mobile)
 - [OPEN] TASK-E05 - revenue mix dashboard per page type

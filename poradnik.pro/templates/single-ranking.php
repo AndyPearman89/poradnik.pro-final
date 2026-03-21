@@ -23,12 +23,13 @@ $topOffers = array_slice($offers, 0, 3);
 		<h2><?php esc_html_e('Top 3 rekomendacje', 'poradnik-pro'); ?></h2>
 		<div class="pp-grid pp-grid--3">
 			<?php foreach ($topOffers as $offer) : ?>
+				<?php $offerCta = MonetizationService::resolveOfferCta((array) $offer); ?>
 				<article class="pp-card pp-ranking-card">
 					<span class="pp-badge pp-badge--premium"><?php echo esc_html((string) ($offer['badge'] ?? 'PREMIUM')); ?></span>
 					<h3 class="u-mt-4"><?php echo esc_html((string) ($offer['name'] ?? 'Oferta')); ?></h3>
 					<p class="u-text-muted"><?php echo esc_html((string) ($offer['price'] ?? '')); ?></p>
 					<p><?php echo esc_html__('Ocena', 'poradnik-pro') . ': ' . esc_html((string) ($offer['rating'] ?? '-')); ?></p>
-					<a class="pp-btn pp-btn--primary" data-pp-affiliate href="<?php echo esc_url((string) ($offer['affiliate_url'] ?? '#')); ?>">
+					<a class="pp-btn pp-btn--primary" data-pp-affiliate data-pp-affiliate-mode="<?php echo esc_attr(($offerCta['is_fallback'] ?? false) ? 'fallback' : 'direct'); ?>" href="<?php echo esc_url((string) ($offerCta['url'] ?? '#')); ?>">
 						<?php esc_html_e('Przejdz do oferty', 'poradnik-pro'); ?>
 					</a>
 				</article>
@@ -51,13 +52,14 @@ $topOffers = array_slice($offers, 0, 3);
 				</thead>
 				<tbody>
 				<?php foreach ($offers as $offer) : ?>
+					<?php $offerCta = MonetizationService::resolveOfferCta((array) $offer); ?>
 					<tr>
 						<td><?php echo esc_html((string) ($offer['rank'] ?? '')); ?></td>
 						<td><?php echo esc_html((string) ($offer['name'] ?? '')); ?></td>
 						<td><?php echo esc_html((string) ($offer['rating'] ?? '')); ?></td>
 						<td><?php echo esc_html((string) ($offer['price'] ?? '')); ?></td>
 						<td>
-							<a data-pp-affiliate href="<?php echo esc_url((string) ($offer['affiliate_url'] ?? '#')); ?>">
+							<a data-pp-affiliate data-pp-affiliate-mode="<?php echo esc_attr(($offerCta['is_fallback'] ?? false) ? 'fallback' : 'direct'); ?>" href="<?php echo esc_url((string) ($offerCta['url'] ?? '#')); ?>">
 								<?php esc_html_e('Szczegoly', 'poradnik-pro'); ?>
 							</a>
 						</td>

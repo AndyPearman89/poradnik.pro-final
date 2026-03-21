@@ -21,7 +21,8 @@ $topOffer = $offers[0] ?? null;
                     <h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
                     <p class="u-text-muted"><?php echo esc_html(wp_trim_words((string) get_the_excerpt(), 20)); ?></p>
                     <?php if ($topOffer) : ?>
-                        <a class="pp-btn pp-btn--secondary" data-pp-affiliate href="<?php echo esc_url((string) ($topOffer['affiliate_url'] ?? '#')); ?>">
+                                    <?php $offerCta = MonetizationService::resolveOfferCta((array) $topOffer); ?>
+                                    <a class="pp-btn pp-btn--secondary" data-pp-affiliate data-pp-affiliate-mode="<?php echo esc_attr(($offerCta['is_fallback'] ?? false) ? 'fallback' : 'direct'); ?>" href="<?php echo esc_url((string) ($offerCta['url'] ?? '#')); ?>">
                             <?php esc_html_e('Sprawdz najlepsza oferte', 'poradnik-pro'); ?>
                         </a>
                     <?php endif; ?>

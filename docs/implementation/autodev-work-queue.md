@@ -20,3 +20,5 @@ Master tasklist: docs/implementation/final-project-tasklist.md
 - DONE: TASK-C03 zrealizowac routing multi/exclusive + testy kontraktu.
 - DONE: TASK-C04 dodac antyspam honeypot + throttle integration tests.
 - OPEN: TASK-C05 zrealizowac monitoring SLA partnerow + alerting.
+- DONE: TASK-E01 dodac testy ranking premium weighting (top 3 determinism + tie behavior).
+- DONE: TASK-E02 dodac walidacje disclosure + fallback CTA afiliacja->lead.
