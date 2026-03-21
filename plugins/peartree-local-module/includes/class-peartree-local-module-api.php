@@ -198,12 +198,46 @@ final class PearTreeLocalModuleApi
         self::storeLead($entry);
         do_action('peartree_local_module_lead_created', $entry);
 
+        // Attempt to route lead to configured partners (non-blocking)
+        self::attemptLeadRouting($entry);
+
         return new WP_REST_Response([
             'ok' => true,
             'status' => 201,
             'message' => 'Lead accepted.',
             'id' => $entry['id'],
         ], 201);
+    }
+
+    private static function attemptLeadRouting(array $entry): void
+    {
+        if (! class_exists('PoradnikPro\LeadRouter')) {
+            return;
+        }
+
+        $partners = \PoradnikPro\LeadRouter::getConfiguredPartners();
+        if ($partners === []) {
+            return;
+        }
+
+        $config = [
+            'mode' => get_option('peartree_lead_route_mode', 'multi'),
+            'partners' => $partners,
+        ];
+
+        $leadForRouting = [
+            'name' => $entry['name'] ?? '',
+            'email_or_phone' => $entry['email_or_phone'] ?? '',
+            'problem' => $entry['problem'] ?? '',
+            'location' => $entry['location'] ?? '',
+        ];
+
+        $result = \PoradnikPro\LeadRouter::routeLead($leadForRouting, $config);
+
+        do_action('peartree_local_module_lead_routed', [
+            'entry_id' => $entry['id'] ?? '',
+            'result' => $result,
+        ]);
     }
 
     public static function registerAdminPage(): void

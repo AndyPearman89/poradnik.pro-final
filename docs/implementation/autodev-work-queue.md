@@ -16,4 +16,6 @@ Master tasklist: docs/implementation/final-project-tasklist.md
 - DONE: TASK-B04 dodac regresje retention 14/365.
 - DONE: TASK-B05 dodac metryke invalid payload count w KPI.
 - DONE: TASK-C01 uruchomic E2E lead flow end-to-end.
-- OPEN: TASK-C02 dodac retry/backoff scenariusze API lead.
+- DONE: TASK-C02 dodac retry/backoff scenariusze API lead.
+- DONE: TASK-C03 zrealizowac routing multi/exclusive + testy kontraktu.
+- OPEN: TASK-C04 dodac antyspam honeypot + throttle integration tests.

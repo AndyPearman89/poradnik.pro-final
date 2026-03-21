@@ -24,8 +24,8 @@
 - [DONE] TASK-B04 - regresja retention 14/365
 - [DONE] TASK-B05 - metryka invalid payload count w KPI
 - [DONE] TASK-C01 - E2E lead flow end-to-end
-- [OPEN] TASK-C02 - retry/backoff scenariusze API lead
-- [OPEN] TASK-C03 - routing multi/exclusive + testy kontraktu
+- [DONE] TASK-C02 - retry/backoff scenariusze API lead
+- [DONE] TASK-C03 - routing multi/exclusive + testy kontraktu
 - [OPEN] TASK-C04 - antyspam honeypot + throttle integration tests
 - [OPEN] TASK-C05 - monitoring SLA partnerow + alerting
 
@@ -59,6 +59,6 @@
 
 - 1) TASK-G03
 - 2) TASK-G05
-- 3) TASK-C02
-- 4) TASK-C03
-- 5) TASK-C04
+- 3) TASK-C03
+- 4) TASK-C04
+- 5) TASK-C05

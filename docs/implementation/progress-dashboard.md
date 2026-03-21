@@ -5,23 +5,23 @@ Zrodlo statusu: docs/implementation/final-project-tasklist.md
 
 ## 1) Postep globalny
 
-DONE: 10 / 36
+DONE: 11 / 36
 BLOCKED: 1 / 36
-OPEN: 25 / 36
+OPEN: 24 / 36
 
-Wykonanie brutto: 27.8%
-Wykonanie netto (bez BLOCKED): 28.6%
+Wykonanie brutto: 30.6%
+Wykonanie netto (bez BLOCKED): 31.4%
 
 Wizualizacja netto:
 
-[######--------------] 28.6%
+[######--------------] 31.4%
 
 ## 2) Postep per priorytet
 
 | Priorytet | DONE | BLOCKED | OPEN | Postep |
 |---|---:|---:|---:|---:|
 | P0 (stabilnosc/release) | 6 | 1 | 0 | 85.7% |
-| P1 (jakosc/konwersja) | 4 | 0 | 5 | 44.4% |
+| P1 (jakosc/konwersja) | 5 | 0 | 4 | 55.6% |
 | P2 (SEO/UX/monetyzacja) | 0 | 0 | 15 | 0.0% |
 | P3 (domkniecie) | 0 | 0 | 5 | 0.0% |
 
@@ -31,7 +31,7 @@ Wizualizacja netto:
 |---|---|---|
 | A | Foundation hardening | 2/2 DONE |
 | B | KPI i dane track | 5/5 DONE |
-| C | Lead flow reliability | 0/5 OPEN |
+| C | Lead flow reliability | 2/5 DONE, 3/5 OPEN |
 | D | SEO scale | 0/5 OPEN |
 | E | Monetization optimization | 0/5 OPEN |
 | F | Frontend quality | 0/5 OPEN |
@@ -40,11 +40,11 @@ Wizualizacja netto:
 
 ## 4) Najblizsze kroki (execution lane)
 
-1. TASK-C01 - E2E lead flow end-to-end
-2. TASK-C02 - retry/backoff scenariusze API lead
-3. TASK-C03 - routing multi/exclusive + testy kontraktu
-4. TASK-C04 - antyspam honeypot + throttle integration tests
-5. TASK-C05 - monitoring SLA partnerow + alerting
+1. TASK-C03 - routing multi/exclusive + testy kontraktu
+2. TASK-C04 - antyspam honeypot + throttle integration tests
+3. TASK-C05 - monitoring SLA partnerow + alerting
+4. TASK-D01 - generator local pages (canonical/meta/schema)
+5. TASK-D02 - structured data auto-test
 
 ## 5) Ryzyka i blokery
 
