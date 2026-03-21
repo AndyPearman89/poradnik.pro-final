@@ -31,12 +31,21 @@
 
 ## Priorytet P2 (SEO, UX, monetyzacja)
 
- [DONE] TASK-D05 - thin-content risk gate
+- [DONE] TASK-D01 - generator local pages (canonical/meta/schema)
+- [DONE] TASK-D02 - structured data auto-test
+- [DONE] TASK-D03 - internal linking depth controller
+- [DONE] TASK-D04 - render tests single-question/archive-local/single-ranking
+- [DONE] TASK-D05 - thin-content risk gate
+- [OPEN] TASK-E01 - ranking premium weighting tests
+- [OPEN] TASK-E02 - disclosure + affiliate->lead fallback validation
+- [OPEN] TASK-E03 - A/B CTA eksperyment + raport
+- [OPEN] TASK-E04 - ads density vs CTA visibility tests (mobile)
+- [OPEN] TASK-E05 - revenue mix dashboard per page type
+- [OPEN] TASK-F01 - search UX interaction tests
 - [OPEN] TASK-F02 - Lighthouse mobile gate + trend
 - [OPEN] TASK-F03 - JS no-jQuery regression suite
 - [OPEN] TASK-F04 - visual smoke for hero/sections/CTA
 - [OPEN] TASK-F05 - a11y audit forms/navigation
-
 ## Priorytet P3 (domkniecie programu)
 
 - [OPEN] TASK-H01 - wszystkie taski A-G w DONE
