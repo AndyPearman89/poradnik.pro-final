@@ -52,7 +52,8 @@
 - 2026-03-21: Zrealizowano TASK-G05: dodano checkliste incydentowa dla awarii /track i lead submit w docs/implementation/incident-response-checklist.md.
 - 2026-03-21: Zrealizowano TASK-A01: dodano idempotentny skrypt bootstrap WP (scripts/bootstrap-wp.sh) i podlaczono go w CI oraz dokumentacji local.
 - 2026-03-21: Zrealizowano TASK-A05: smoke test FE uruchamiany w CI w trybie --strict-runtime, failuje na markerach runtime error w homepage i /track response.
-- Kolejny krok: zrealizowac TASK-B02 (test kontraktu export CSV dla 365 dni).
+- 2026-03-21: Zrealizowano TASK-B02: dodano test kontraktu pelnego eksportu CSV dla 365 dni (1 header + 365 rows, granice dat).
+- Kolejny krok: zrealizowac TASK-B03 (walidacja schematu payload /track, allowlist).
 
 ## Etap 1: Foundation (MVP techniczne)
 

@@ -595,6 +595,46 @@ function testAnalyticsServiceExportCsvValueContract(): void
     echo "✓ AnalyticsService::buildExportCsv value contract\n";
 }
 
+function testAnalyticsServiceExportCsvFull365DaysContract(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildExportCsv');
+    $method->setAccessible(true);
+
+    $startDate = new DateTimeImmutable('2025-01-01 00:00:00 UTC');
+    $store = [];
+
+    for ($i = 0; $i < 365; $i++) {
+        $day = $startDate->modify('+' . $i . ' days')->format('Y-m-d');
+        $store[$day] = [
+            'events' => [
+                'evt' => $i + 1,
+            ],
+            'sources' => [
+                'source_' . (($i % 3) + 1) => $i + 2,
+            ],
+            'revenue' => [
+                'lead_success' => $i % 5,
+                'affiliate_clicks' => $i % 7,
+                'estimated_lead_revenue' => (float) ($i % 5) * 10,
+                'estimated_affiliate_revenue' => (float) ($i % 7) * 1.5,
+            ],
+        ];
+    }
+
+    $csv = (string) $method->invoke(null, $store);
+    $lines = preg_split('/\r?\n/', trim($csv)) ?: [];
+
+    assertSame(366, count($lines), '365-day export should produce 1 header + 365 data rows');
+
+    $firstData = str_getcsv($lines[1]);
+    $lastData = str_getcsv($lines[365]);
+
+    assertSame('2025-01-01', $firstData[0] ?? null, '365-day export should keep earliest day in first data row');
+    assertSame('2025-12-31', $lastData[0] ?? null, '365-day export should keep latest day in last data row');
+
+    echo "✓ AnalyticsService::buildExportCsv full 365-day contract\n";
+}
+
 function testAnalyticsServiceConfigRetentionClamp(): void
 {
     global $mockCanManageOptions;
@@ -1155,6 +1195,7 @@ try {
     testAnalyticsServiceExportCsvEmptyStoreHeaderOnly();
     testAnalyticsServiceExportFilenameTimestampSmokeCheck();
     testAnalyticsServiceExportCsvValueContract();
+    testAnalyticsServiceExportCsvFull365DaysContract();
     testAnalyticsServiceBuildSummaryMultiDayAggregation();
     testAnalyticsServiceBuildSummaryEmptyInputFallback();
     testAnalyticsServiceBuildSummaryTopSourcesLimit();
