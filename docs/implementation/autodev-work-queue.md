@@ -7,4 +7,5 @@ Master tasklist: docs/implementation/final-project-tasklist.md
 - DONE: TASK-B01 wykonac pelny E2E HTTP test dashboardu KPI dla tie-order top_sources (dane wielodniowe).
 - DONE: TASK-G01 uruchomic nightly pipeline (smoke + unit + integration + load + raport).
 - DONE: TASK-G03 dopisac release runbook: preflight, deploy, rollback, post-deploy checks.
-- OPEN: TASK-G04 wdrozyc branch protection + required checks dla main.
+- BLOCKED: TASK-G04 wymaga ustawien branch protection i required checks bezposrednio w GitHub repo settings.
+- OPEN: TASK-G05 przygotowac checklist incydentowa dla awarii /track i lead submit.

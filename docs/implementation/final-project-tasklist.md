@@ -12,7 +12,7 @@
 - [DONE] TASK-B01 - E2E HTTP dashboard KPI tie-order (multiday)
 - [DONE] TASK-G01 - nightly pipeline (smoke + unit + integration + load + raport)
 - [DONE] TASK-G03 - release runbook (preflight/deploy/rollback/post-deploy)
-- [DONE] TASK-G04 - branch protection i required checks dla main
+- [BLOCKED] TASK-G04 - branch protection i required checks dla main
 - [OPEN] TASK-G05 - checklist incydentowa /track i lead submit
 - [OPEN] TASK-A01 - idempotent bootstrap WP (CI + local)
 - [OPEN] TASK-A05 - hard gate runtime errors w FE smoke
@@ -58,7 +58,7 @@
 ## Kolejnosc wykonania (najblizszy sprint)
 
 - 1) TASK-G03
-- 2) TASK-G04
+- 2) TASK-G05
 - 3) TASK-A01
 - 4) TASK-A05
 - 5) TASK-B02

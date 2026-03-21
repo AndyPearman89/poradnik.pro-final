@@ -72,7 +72,7 @@ def analyze(repo_path: Path) -> dict[str, Any]:
 
     tasklist_path = repo_path / "docs" / "implementation" / "final-project-tasklist.md"
     if tasklist_path.exists():
-        pattern = re.compile(r"^- \[(OPEN|WIP)\] (TASK-[A-Z]\d{2}) - (.+)$")
+        pattern = re.compile(r"^- \[(OPEN)\] (TASK-[A-Z]\d{2}) - (.+)$")
         for idx, raw in enumerate(tasklist_path.read_text(encoding="utf-8").splitlines(), start=1):
             match = pattern.match(raw.strip())
             if not match:

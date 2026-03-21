@@ -23,6 +23,7 @@ IGNORED_PREFIXES = (
 
 KPI_SUMMARY_SCRIPT = "scripts/integration-test-kpi-summary.mjs"
 RELEASE_RUNBOOK_FILE = "docs/implementation/release-runbook.md"
+WORK_QUEUE_FILE = "docs/implementation/autodev-work-queue.md"
 
 KPI_SUMMARY_TEMPLATE = """#!/usr/bin/env node
 
@@ -180,7 +181,7 @@ def _create_release_runbook(repo_root: Path) -> bool:
     return True
 
 
-def _mark_tasklist_done(repo_root: Path, rel_file: str, line_no: int | None) -> bool:
+def _set_tasklist_status(repo_root: Path, rel_file: str, line_no: int | None, status: str) -> bool:
     target = (repo_root / rel_file).resolve()
     if not target.exists() or not target.is_file():
         return False
@@ -191,13 +192,34 @@ def _mark_tasklist_done(repo_root: Path, rel_file: str, line_no: int | None) -> 
 
     idx = line_no - 1
     src = lines[idx]
-    dst = src.replace("[OPEN]", "[DONE]", 1).replace("[WIP]", "[DONE]", 1)
+    dst = src
+    for source in ("OPEN", "WIP", "BLOCKED", "DONE"):
+        dst = dst.replace(f"[{source}]", f"[{status}]", 1)
+        if dst != src:
+            break
     if src == dst:
         return False
 
     lines[idx] = dst
     target.write_text("".join(lines), encoding="utf-8")
     return True
+
+
+def _append_blocked_note(repo_root: Path, task_id: str, reason: str) -> None:
+    target = (repo_root / WORK_QUEUE_FILE).resolve()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if not target.exists():
+        return
+
+    marker = f"- BLOCKED: {task_id} {reason}"
+    content = target.read_text(encoding="utf-8")
+    if marker in content:
+        return
+
+    if not content.endswith("\n"):
+        content += "\n"
+    content += marker + "\n"
+    target.write_text(content, encoding="utf-8")
 
 
 def _extract_task_id(details: str | None) -> str:
@@ -220,9 +242,14 @@ def main() -> int:
         task_id = _extract_task_id(task.details)
         if task_id == "TASK-G03":
             _create_release_runbook(repo_root)
+            line_no = int(task.line) if isinstance(task.line, int) else None
+            _set_tasklist_status(repo_root, str(task.file), line_no, "DONE")
+            return 0
 
         line_no = int(task.line) if isinstance(task.line, int) else None
-        _mark_tasklist_done(repo_root, str(task.file), line_no)
+        _set_tasklist_status(repo_root, str(task.file), line_no, "BLOCKED")
+        if task_id:
+            _append_blocked_note(repo_root, task_id, "wymaga ustawien poza repo (GitHub/infra).")
         return 0
 
     if _contains_kpi_summary_request(task.details):
