@@ -50,7 +50,8 @@
 - 2026-03-21: Zrealizowano TASK-G03: dodano release runbook (preflight/deploy/rollback/post-deploy) w docs/implementation/release-runbook.md.
 - 2026-03-21: TASK-G04 oznaczono jako BLOCKED (wymaga recznej konfiguracji GitHub branch protection poza repo code).
 - 2026-03-21: Zrealizowano TASK-G05: dodano checkliste incydentowa dla awarii /track i lead submit w docs/implementation/incident-response-checklist.md.
-- Kolejny krok: zrealizowac TASK-A01 (idempotent bootstrap WP w CI i local).
+- 2026-03-21: Zrealizowano TASK-A01: dodano idempotentny skrypt bootstrap WP (scripts/bootstrap-wp.sh) i podlaczono go w CI oraz dokumentacji local.
+- Kolejny krok: zrealizowac TASK-A05 (twardy gate runtime errors w FE smoke).
 
 ## Etap 1: Foundation (MVP techniczne)
 

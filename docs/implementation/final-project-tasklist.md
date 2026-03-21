@@ -14,7 +14,7 @@
 - [DONE] TASK-G03 - release runbook (preflight/deploy/rollback/post-deploy)
 - [BLOCKED] TASK-G04 - branch protection i required checks dla main
 - [DONE] TASK-G05 - checklist incydentowa /track i lead submit
-- [OPEN] TASK-A01 - idempotent bootstrap WP (CI + local)
+- [DONE] TASK-A01 - idempotent bootstrap WP (CI + local)
 - [OPEN] TASK-A05 - hard gate runtime errors w FE smoke
 
 ## Priorytet P1 (jakosc danych i konwersja)
@@ -59,6 +59,6 @@
 
 - 1) TASK-G03
 - 2) TASK-G05
-- 3) TASK-A01
-- 4) TASK-A05
-- 5) TASK-B02
+- 3) TASK-A05
+- 4) TASK-B02
+- 5) TASK-B03

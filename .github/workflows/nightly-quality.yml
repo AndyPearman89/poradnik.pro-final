@@ -37,21 +37,14 @@ jobs:
           echo "WordPress container did not become ready in time"
           exit 1
 
-      - name: Bootstrap WP core if needed
+      - name: Bootstrap WordPress (idempotent)
         run: |
-          set -euo pipefail
-          docker compose --profile tools run --rm wpcli wp core is-installed --allow-root || \
-          docker compose --profile tools run --rm wpcli wp core install \
-            --url=http://localhost:8080 \
-            --title="Poradnik Pro Nightly" \
-            --admin_user=admin \
-            --admin_password=admin123! \
-            --admin_email=admin@example.com \
-            --skip-email \
-            --allow-root
-
-      - name: Activate theme
-        run: docker compose --profile tools run --rm wpcli wp theme activate poradnik.pro --allow-root
+          bash scripts/bootstrap-wp.sh \
+            --site-url http://localhost:8080 \
+            --site-title "Poradnik Pro Nightly" \
+            --admin-user admin \
+            --admin-password "admin123!" \
+            --admin-email admin@example.com
 
       - name: Seed KPI store for dashboard tie-order E2E
         run: |

@@ -7,9 +7,10 @@ Szybkie uruchomienie lokalnego WordPress + MySQL:
 ```bash
 cp .env.example .env
 docker compose up -d
+bash scripts/bootstrap-wp.sh --site-url http://localhost:8080 --site-title "Poradnik Pro Local"
 ```
 
-Po starcie otworz http://localhost:8080 i wykonaj jednorazowa instalacje WordPress.
+Bootstrap jest idempotentny: mozna uruchamiac wielokrotnie bez ryzyka duplikacji instalacji.
 
 Aktywacja lokalnego modulu E2E (REST API + UI):
 
