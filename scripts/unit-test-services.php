@@ -1427,6 +1427,67 @@ function testAnalyticsServiceBuildSummaryExperimentReportContract(): void
     echo "✓ AnalyticsService::buildSummary experiment report contract\n";
 }
 
+function testAnalyticsServiceBuildSummaryRevenueMixPerPageTypeContract(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'buildSummary');
+    $method->setAccessible(true);
+
+    $rows = [
+        '2026-03-25' => [
+            'revenue' => [
+                'lead_success' => 0,
+                'affiliate_clicks' => 0,
+                'estimated_lead_revenue' => 0.0,
+                'estimated_affiliate_revenue' => 0.0,
+            ],
+            'page_type_revenue' => [
+                'home' => [
+                    'affiliate_revenue' => 4.5,
+                    'lead_revenue' => 30.0,
+                ],
+                'ranking' => [
+                    'affiliate_revenue' => 9.0,
+                    'lead_revenue' => 10.0,
+                ],
+            ],
+        ],
+        '2026-03-24' => [
+            'revenue' => [
+                'lead_success' => 0,
+                'affiliate_clicks' => 0,
+                'estimated_lead_revenue' => 0.0,
+                'estimated_affiliate_revenue' => 0.0,
+            ],
+            'page_type_revenue' => [
+                'home' => [
+                    'affiliate_revenue' => 1.5,
+                    'lead_revenue' => 0.0,
+                ],
+            ],
+        ],
+    ];
+
+    $summary = (array) $method->invoke(null, $rows);
+    $mix = (array) ($summary['revenue_mix_by_page_type'] ?? []);
+
+    assertSame(2, count($mix), 'buildSummary should expose two page type rows in revenue mix report');
+
+    $rowHome = $mix[0] ?? [];
+    $rowRanking = $mix[1] ?? [];
+
+    assertSame('home', (string) ($rowHome['page_type'] ?? ''), 'revenue mix should sort by total revenue descending (home first)');
+    assertSame(6.0, round((float) ($rowHome['affiliate_revenue'] ?? 0), 2), 'home affiliate revenue should aggregate across days');
+    assertSame(30.0, round((float) ($rowHome['lead_revenue'] ?? 0), 2), 'home lead revenue should aggregate across days');
+    assertSame(36.0, round((float) ($rowHome['total_revenue'] ?? 0), 2), 'home total revenue should equal affiliate+lead');
+    assertSame(16.67, round((float) ($rowHome['affiliate_mix_percent'] ?? 0), 2), 'home affiliate mix percent should be calculated correctly');
+    assertSame(83.33, round((float) ($rowHome['lead_mix_percent'] ?? 0), 2), 'home lead mix percent should be calculated correctly');
+
+    assertSame('ranking', (string) ($rowRanking['page_type'] ?? ''), 'revenue mix should include ranking row');
+    assertSame(19.0, round((float) ($rowRanking['total_revenue'] ?? 0), 2), 'ranking total revenue should be calculated');
+
+    echo "✓ AnalyticsService::buildSummary revenue mix per page type contract\n";
+}
+
 function testMonetizationServicePremiumWeightingTopThreeDeterminism(): void
 {
     global $mockPostMetaByPostId;
@@ -1626,6 +1687,7 @@ try {
     testAnalyticsServiceTrackEndpointTopSourcesTieMultiDayIntegration();
     testAnalyticsServiceTrackEndpointInvalidPayloadCountIntegration();
     testAnalyticsServiceBuildSummaryExperimentReportContract();
+    testAnalyticsServiceBuildSummaryRevenueMixPerPageTypeContract();
     testMonetizationServicePremiumWeightingTopThreeDeterminism();
     testMonetizationServiceTieBehaviorDeterministicByInputOrder();
     testMonetizationServiceResolveOfferCtaDirectUrlContract();

@@ -349,7 +349,7 @@ Status legend:
 - TASK-E02 [DONE] Dodac walidacje disclosure i fallback CTA afiliacja->lead.
 - TASK-E03 [DONE] Dodac eksperyment A/B dla sekcji CTA z event contract i raportem wyniku.
 - TASK-E04 [DONE] Dodac testy balansu ads density vs CTA visibility (mobile first).
-- TASK-E05 [OPEN] Dodac dashboard mix revenue per page type (ads/affiliate/lead).
+- TASK-E05 [DONE] Dodac dashboard mix revenue per page type (ads/affiliate/lead).
 
 ### Faza F - Frontend, UX i wydajnosc
 

@@ -37,6 +37,7 @@ final class AnalyticsService
     private const ALLOWED_PAYLOAD_KEYS = [
         'source',
         'channel',
+        'page_type',
         'intent',
         'term',
         'query',
@@ -90,6 +91,10 @@ final class AnalyticsService
         $payload = (array) $request->get_json_params();
         $eventName = self::normalizeEventName((string) ($payload['eventName'] ?? 'unknown'));
         $eventData = self::normalizePayload((array) ($payload['payload'] ?? []));
+        if (! isset($eventData['path']) && isset($payload['path']) && is_string($payload['path'])) {
+            $eventData['path'] = sanitize_text_field((string) $payload['path']);
+        }
+        $pageType = self::derivePageType($eventData);
         $source = sanitize_key((string) ($eventData['source'] ?? ''));
         if ($source === '') {
             $source = sanitize_key((string) ($eventData['channel'] ?? ''));
@@ -107,6 +112,7 @@ final class AnalyticsService
                 'events' => [],
                 'sources' => [],
                 'experiments' => [],
+                'page_type_revenue' => [],
                 'quality' => [
                     'invalid_payload_count' => 0,
                 ],
@@ -125,11 +131,13 @@ final class AnalyticsService
         if ($eventName === 'cta_click' && $source === 'affiliate') {
             $store[$day]['revenue']['affiliate_clicks']++;
             $store[$day]['revenue']['estimated_affiliate_revenue'] += (float) $config['affiliate_value_per_click'];
+            self::addPageTypeRevenue($store[$day], $pageType, 'affiliate', (float) $config['affiliate_value_per_click']);
         }
 
         if ($eventName === 'lead_submit_success') {
             $store[$day]['revenue']['lead_success']++;
             $store[$day]['revenue']['estimated_lead_revenue'] += (float) $config['lead_value_per_success'];
+            self::addPageTypeRevenue($store[$day], $pageType, 'lead', (float) $config['lead_value_per_success']);
         }
 
         if ($eventName === 'unknown' || $source === 'unknown') {
@@ -269,6 +277,33 @@ final class AnalyticsService
                 echo '<td>' . esc_html((string) ((int) ($row['cta_clicks'] ?? 0))) . '</td>';
                 echo '<td>' . esc_html((string) ((int) ($row['lead_success'] ?? 0))) . '</td>';
                 echo '<td>' . esc_html(number_format((float) ($row['conversion_rate'] ?? 0), 2, '.', '')) . '</td>';
+                echo '</tr>';
+            }
+
+            echo '</tbody></table>';
+        }
+
+        $revenueMix = (array) ($summary['revenue_mix_by_page_type'] ?? []);
+        if ($revenueMix !== []) {
+            echo '<h2 style="margin-top:24px;">' . esc_html__('Revenue mix per page type (14 dni)', 'poradnik-pro') . '</h2>';
+            echo '<table class="widefat striped">';
+            echo '<thead><tr>';
+            echo '<th>' . esc_html__('Page type', 'poradnik-pro') . '</th>';
+            echo '<th>' . esc_html__('Affiliate revenue', 'poradnik-pro') . '</th>';
+            echo '<th>' . esc_html__('Lead revenue', 'poradnik-pro') . '</th>';
+            echo '<th>' . esc_html__('Total revenue', 'poradnik-pro') . '</th>';
+            echo '<th>' . esc_html__('Affiliate mix %', 'poradnik-pro') . '</th>';
+            echo '<th>' . esc_html__('Lead mix %', 'poradnik-pro') . '</th>';
+            echo '</tr></thead><tbody>';
+
+            foreach ($revenueMix as $row) {
+                echo '<tr>';
+                echo '<td>' . esc_html((string) ($row['page_type'] ?? 'unknown')) . '</td>';
+                echo '<td>' . esc_html(number_format((float) ($row['affiliate_revenue'] ?? 0), 2, '.', '')) . '</td>';
+                echo '<td>' . esc_html(number_format((float) ($row['lead_revenue'] ?? 0), 2, '.', '')) . '</td>';
+                echo '<td>' . esc_html(number_format((float) ($row['total_revenue'] ?? 0), 2, '.', '')) . '</td>';
+                echo '<td>' . esc_html(number_format((float) ($row['affiliate_mix_percent'] ?? 0), 2, '.', '')) . '</td>';
+                echo '<td>' . esc_html(number_format((float) ($row['lead_mix_percent'] ?? 0), 2, '.', '')) . '</td>';
                 echo '</tr>';
             }
 
@@ -432,6 +467,7 @@ final class AnalyticsService
         $affiliateRevenue = 0.0;
         $sourceTotals = [];
         $experimentTotals = [];
+        $pageTypeRevenueTotals = [];
 
         foreach ($rows as $data) {
             $revenue = (array) ($data['revenue'] ?? []);
@@ -479,6 +515,25 @@ final class AnalyticsService
                     $experimentTotals[$experimentKey][$variantKey]['lead_success'] += max(0, (int) ($metricsArr['lead_success'] ?? 0));
                 }
             }
+
+            $pageTypeRevenue = (array) ($data['page_type_revenue'] ?? []);
+            foreach ($pageTypeRevenue as $pageType => $revenueByChannel) {
+                $pageTypeKey = sanitize_key((string) $pageType);
+                if ($pageTypeKey === '') {
+                    continue;
+                }
+
+                if (! isset($pageTypeRevenueTotals[$pageTypeKey])) {
+                    $pageTypeRevenueTotals[$pageTypeKey] = [
+                        'affiliate_revenue' => 0.0,
+                        'lead_revenue' => 0.0,
+                    ];
+                }
+
+                $channels = (array) $revenueByChannel;
+                $pageTypeRevenueTotals[$pageTypeKey]['affiliate_revenue'] += max(0.0, (float) ($channels['affiliate_revenue'] ?? 0));
+                $pageTypeRevenueTotals[$pageTypeKey]['lead_revenue'] += max(0.0, (float) ($channels['lead_revenue'] ?? 0));
+            }
         }
 
         uksort($sourceTotals, static function (string $left, string $right) use ($sourceTotals): int {
@@ -499,7 +554,61 @@ final class AnalyticsService
             'estimated_total_revenue' => $leadRevenue + $affiliateRevenue,
             'top_sources' => array_slice($sourceTotals, 0, 10, true),
             'experiment_report' => self::buildExperimentReport($experimentTotals),
+            'revenue_mix_by_page_type' => self::buildRevenueMixReport($pageTypeRevenueTotals),
         ];
+    }
+
+    private static function addPageTypeRevenue(array &$dayStore, string $pageType, string $channel, float $amount): void
+    {
+        $safeType = sanitize_key($pageType);
+        if ($safeType === '') {
+            $safeType = 'unknown';
+        }
+
+        if (! isset($dayStore['page_type_revenue']) || ! is_array($dayStore['page_type_revenue'])) {
+            $dayStore['page_type_revenue'] = [];
+        }
+
+        if (! isset($dayStore['page_type_revenue'][$safeType])) {
+            $dayStore['page_type_revenue'][$safeType] = [
+                'affiliate_revenue' => 0.0,
+                'lead_revenue' => 0.0,
+            ];
+        }
+
+        if ($channel === 'affiliate') {
+            $dayStore['page_type_revenue'][$safeType]['affiliate_revenue'] += max(0.0, $amount);
+            return;
+        }
+
+        if ($channel === 'lead') {
+            $dayStore['page_type_revenue'][$safeType]['lead_revenue'] += max(0.0, $amount);
+        }
+    }
+
+    private static function derivePageType(array $eventData): string
+    {
+        $raw = sanitize_text_field((string) ($eventData['page_type'] ?? ''));
+        if ($raw !== '') {
+            $safe = sanitize_key($raw);
+            return $safe === '' ? 'unknown' : $safe;
+        }
+
+        $path = strtolower((string) ($eventData['path'] ?? ''));
+        if ($path === '' || $path === '/') {
+            return 'home';
+        }
+        if (str_contains($path, '/ranking')) {
+            return 'ranking';
+        }
+        if (str_contains($path, '/uslugi')) {
+            return 'local';
+        }
+        if (str_contains($path, '/pytanie')) {
+            return 'question';
+        }
+
+        return 'guide';
     }
 
     private static function ingestExperimentMetrics(array &$dayStore, string $eventName, array $eventData): void
@@ -561,6 +670,38 @@ final class AnalyticsService
             }
 
             return strcmp((string) ($left['variant'] ?? ''), (string) ($right['variant'] ?? ''));
+        });
+
+        return $rows;
+    }
+
+    private static function buildRevenueMixReport(array $pageTypeRevenueTotals): array
+    {
+        $rows = [];
+
+        foreach ($pageTypeRevenueTotals as $pageType => $revenue) {
+            $revenueArr = (array) $revenue;
+            $affiliate = max(0.0, (float) ($revenueArr['affiliate_revenue'] ?? 0));
+            $lead = max(0.0, (float) ($revenueArr['lead_revenue'] ?? 0));
+            $total = $affiliate + $lead;
+
+            $rows[] = [
+                'page_type' => (string) $pageType,
+                'affiliate_revenue' => $affiliate,
+                'lead_revenue' => $lead,
+                'total_revenue' => $total,
+                'affiliate_mix_percent' => $total > 0 ? ($affiliate * 100) / $total : 0.0,
+                'lead_mix_percent' => $total > 0 ? ($lead * 100) / $total : 0.0,
+            ];
+        }
+
+        usort($rows, static function (array $left, array $right): int {
+            $totalCmp = ((float) ($right['total_revenue'] ?? 0)) <=> ((float) ($left['total_revenue'] ?? 0));
+            if ($totalCmp !== 0) {
+                return $totalCmp;
+            }
+
+            return strcmp((string) ($left['page_type'] ?? ''), (string) ($right['page_type'] ?? ''));
         });
 
         return $rows;

@@ -5,16 +5,16 @@ Zrodlo statusu: docs/implementation/final-project-tasklist.md
 
 ## 1) Postep globalny
 
-DONE: 24 / 36
+DONE: 25 / 36
 BLOCKED: 1 / 36
-OPEN: 11 / 36
+OPEN: 10 / 36
 
-Wykonanie brutto: 66.7%
-Wykonanie netto (bez BLOCKED): 68.6%
+Wykonanie brutto: 69.4%
+Wykonanie netto (bez BLOCKED): 71.4%
 
 Wizualizacja netto:
 
-[##############------] 68.6%
+[##############------] 71.4%
 
 ## 2) Postep per priorytet
 
@@ -22,7 +22,7 @@ Wizualizacja netto:
 |---|---:|---:|---:|---:|
 | P0 (stabilnosc/release) | 6 | 1 | 0 | 85.7% |
 | P1 (jakosc/konwersja) | 9 | 0 | 0 | 100.0% |
-| P2 (SEO/UX/monetyzacja) | 9 | 0 | 6 | 60.0% |
+| P2 (SEO/UX/monetyzacja) | 10 | 0 | 5 | 66.7% |
 | P3 (domkniecie) | 0 | 0 | 5 | 0.0% |
 
 ## 3) Mapa etapow (A-H)
@@ -33,18 +33,18 @@ Wizualizacja netto:
 | B | KPI i dane track | 5/5 DONE |
 | C | Lead flow reliability | 5/5 DONE |
 | D | SEO scale | 5/5 DONE |
-| E | Monetization optimization | 4/5 DONE, 1/5 OPEN |
+| E | Monetization optimization | 5/5 DONE |
 | F | Frontend quality | 0/5 OPEN |
 | G | Governance/ops | 4/5 DONE, 1 BLOCKED (G04) |
 | H | Program closure | 0/5 OPEN |
 
 ## 4) Najblizsze kroki (execution lane)
 
-1. TASK-E05 - revenue mix dashboard per page type
-2. TASK-F01 - search UX interaction tests
-3. TASK-F02 - Lighthouse mobile gate + trend
-4. TASK-F03 - JS no-jQuery regression suite
-5. TASK-F04 - visual smoke for hero/sections/CTA
+1. TASK-F01 - search UX interaction tests
+2. TASK-F02 - Lighthouse mobile gate + trend
+3. TASK-F03 - JS no-jQuery regression suite
+4. TASK-F04 - visual smoke for hero/sections/CTA
+5. TASK-F05 - a11y audit forms/navigation
 
 ## 5) Ryzyka i blokery
 
@@ -53,7 +53,7 @@ Wizualizacja netto:
 
 ## 6) Definicja done dla kolejnego kamienia
 
-Nastepny kamien: zamkniecie etapu E (5/5) i start etapu F, przy utrzymaniu zielonych testow:
+Nastepny kamien: zamkniecie etapu F (5/5), przy utrzymaniu zielonych testow:
 - php scripts/unit-test-services.php
 - php scripts/unit-test-local-module-api.php
 - node scripts/integration-test-ads-cta-visibility.mjs --base http://127.0.0.1:8080
