@@ -273,6 +273,54 @@ function testPruneStoreRetentionOneKeepsOnlyToday(): void
     echo "✓ AnalyticsService::pruneStore retention_days=1 edge-case\n";
 }
 
+function testPruneStoreRetentionBoundaryFourteenDays(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'pruneStore');
+    $method->setAccessible(true);
+
+    $today = gmdate('Y-m-d');
+    $keepEdge = gmdate('Y-m-d', strtotime('-13 days UTC'));
+    $dropEdge = gmdate('Y-m-d', strtotime('-14 days UTC'));
+
+    $store = [
+        $dropEdge => ['events' => ['old' => 1]],
+        $keepEdge => ['events' => ['edge' => 1]],
+        $today => ['events' => ['new' => 1]],
+    ];
+
+    $result = $method->invoke(null, $store, 14);
+
+    assertTrue(isset($result[$keepEdge]), 'retention_days=14 should keep day at cutoff-1 (today-13)');
+    assertTrue(! isset($result[$dropEdge]), 'retention_days=14 should drop day outside window (today-14)');
+    assertTrue(isset($result[$today]), 'retention_days=14 should keep today');
+
+    echo "✓ AnalyticsService::pruneStore retention_days=14 boundary regression\n";
+}
+
+function testPruneStoreRetentionBoundaryThreeHundredSixtyFiveDays(): void
+{
+    $method = new ReflectionMethod(AnalyticsService::class, 'pruneStore');
+    $method->setAccessible(true);
+
+    $today = gmdate('Y-m-d');
+    $keepEdge = gmdate('Y-m-d', strtotime('-364 days UTC'));
+    $dropEdge = gmdate('Y-m-d', strtotime('-365 days UTC'));
+
+    $store = [
+        $dropEdge => ['events' => ['old' => 1]],
+        $keepEdge => ['events' => ['edge' => 1]],
+        $today => ['events' => ['new' => 1]],
+    ];
+
+    $result = $method->invoke(null, $store, 365);
+
+    assertTrue(isset($result[$keepEdge]), 'retention_days=365 should keep day at cutoff-1 (today-364)');
+    assertTrue(! isset($result[$dropEdge]), 'retention_days=365 should drop day outside window (today-365)');
+    assertTrue(isset($result[$today]), 'retention_days=365 should keep today');
+
+    echo "✓ AnalyticsService::pruneStore retention_days=365 boundary regression\n";
+}
+
 function testLeadServiceSanitizesPayloadBeforeApiCall(): void
 {
     global $capturedRemotePost;
@@ -1243,6 +1291,8 @@ try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
     testPruneStoreRetentionOneKeepsOnlyToday();
+    testPruneStoreRetentionBoundaryFourteenDays();
+    testPruneStoreRetentionBoundaryThreeHundredSixtyFiveDays();
     testLeadServiceSanitizesPayloadBeforeApiCall();
     testLeadServiceHoneypotShortCircuitsApiCall();
     testLeadServiceHandlesApiFailure();
