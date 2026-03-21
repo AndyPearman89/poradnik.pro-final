@@ -31,13 +31,7 @@
 
 ## Priorytet P2 (SEO, UX, monetyzacja)
 
- [DONE] TASK-D04 - render tests single-question/archive-local/single-ranking
-- [OPEN] TASK-E01 - ranking premium weighting tests
-- [OPEN] TASK-E02 - disclosure + affiliate->lead fallback validation
-- [OPEN] TASK-E03 - A/B CTA eksperyment + raport
-- [OPEN] TASK-E04 - ads density vs CTA visibility tests (mobile)
-- [OPEN] TASK-E05 - revenue mix dashboard per page type
-- [OPEN] TASK-F01 - search UX interaction tests
+ [DONE] TASK-D05 - thin-content risk gate
 - [OPEN] TASK-F02 - Lighthouse mobile gate + trend
 - [OPEN] TASK-F03 - JS no-jQuery regression suite
 - [OPEN] TASK-F04 - visual smoke for hero/sections/CTA
