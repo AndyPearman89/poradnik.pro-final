@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PoradnikPro;
 
+use PearTree_Pro\SlaMonitor;
+
 final class LeadRouter
 {
     private const ROUTING_MODE_MULTI = 'multi';
@@ -139,6 +141,8 @@ final class LeadRouter
             'timestamp' => gmdate('c'),
         ];
 
+        $startTime = microtime(true);
+
         $response = wp_remote_post($endpoint, [
             'timeout' => (int) ($partner['timeout'] ?? 10),
             'headers' => [
@@ -148,7 +152,15 @@ final class LeadRouter
             'body' => wp_json_encode($payload),
         ]);
 
+        $endTime = microtime(true);
+        $responseTimeMs = (int) (($endTime - $startTime) * 1000);
+
         if (is_wp_error($response)) {
+            // Record SLA metric for error response
+            if (! empty($partner['id'])) {
+                SlaMonitor::recordPartnerResponse($partner['id'], 500, $responseTimeMs);
+            }
+
             return [
                 'ok' => false,
                 'status' => 500,
@@ -158,6 +170,11 @@ final class LeadRouter
 
         $status = (int) wp_remote_retrieve_response_code($response);
         $ok = $status >= 200 && $status < 300;
+
+        // Record SLA metric for all responses
+        if (! empty($partner['id'])) {
+            SlaMonitor::recordPartnerResponse($partner['id'], $status, $responseTimeMs);
+        }
 
         if ($ok && ! empty($partner['id']) && ! empty($partner['daily_limit'])) {
             $routedToday = (int) (get_transient('peartree_routed_' . $partner['id']) ?? 0);

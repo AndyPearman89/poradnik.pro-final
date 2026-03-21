@@ -164,6 +164,9 @@ if (! function_exists('wp_remote_retrieve_body')) {
     }
 }
 
+// Load SlaMonitor first (with mocked WordPress functions)
+require_once __DIR__ . '/../poradnik.pro/inc/SlaMonitor.php';
+
 require_once __DIR__ . '/../poradnik.pro/inc/LeadRouter.php';
 
 use PoradnikPro\LeadRouter;
