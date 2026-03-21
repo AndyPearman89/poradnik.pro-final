@@ -31,7 +31,7 @@
 
 ## Priorytet P2 (SEO, UX, monetyzacja)
 
-- [OPEN] TASK-D01 - generator local pages (canonical/meta/schema)
+- [DONE] TASK-D01 - generator local pages (canonical/meta/schema)
 - [OPEN] TASK-D02 - structured data auto-test
 - [OPEN] TASK-D03 - internal linking depth controller
 - [OPEN] TASK-D04 - render tests single-question/archive-local/single-ranking
