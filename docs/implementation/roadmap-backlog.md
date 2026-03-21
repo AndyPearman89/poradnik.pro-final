@@ -45,7 +45,8 @@
 - 2026-03-20: Dodano test buildSummary dla scenariusza >10 sources z remisami count oraz wdrozono deterministyczne sortowanie tie-break po nazwie source (ASC).
 - 2026-03-21: Dodano test integracyjny kontraktu /track dla sortowania top_sources po tie na danych z wielu dni (ingestEvent + buildSummary) w scripts/unit-test-services.php.
 - 2026-03-21: Wdrozono tryb operacyjny "Senior Dev Agent + Human Controller": push kontrolowany (manualny), runbook nadzorczy i walidacja artefaktu scripts/integration-test-kpi-summary.mjs.
-- Kolejny krok: dodać test E2E (HTTP) w stacku Docker, który potwierdzi widoczność uporządkowanych top_sources w dashboardzie KPI dla danych wielodniowych.
+- 2026-03-21: Zrealizowano TASK-B01: pelny E2E HTTP test dashboardu KPI dla tie-order top_sources (multiday), skrypt scripts/integration-test-kpi-dashboard.mjs + seed danych w CI.
+- Kolejny krok: zrealizowac TASK-G01 (nightly pipeline: smoke + unit + integration + load + raport).
 
 ## Etap 1: Foundation (MVP techniczne)
 
