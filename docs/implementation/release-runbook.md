@@ -25,7 +25,7 @@ Standaryzacja bezpiecznego wydania zmian: preflight -> deploy -> rollback -> pos
 
 ## 4. Post-deploy checks
 
-- Uruchom smoke: `node scripts/smoke-test-fe.mjs --base <url>`.
+- Uruchom smoke: `node scripts/smoke-test-fe.mjs --base <url> --strict-runtime`.
 - Uruchom integracje: lead form + KPI dashboard.
 - Uruchom unit tests PHP.
 - Uruchom load suite i SLO gate.

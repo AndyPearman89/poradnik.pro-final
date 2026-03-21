@@ -34,7 +34,7 @@ Checklist dla awarii krytycznych:
 
 ## Recovery validation
 
-- `node scripts/smoke-test-fe.mjs --base <url>`
+- `node scripts/smoke-test-fe.mjs --base <url> --strict-runtime`
 - `node scripts/integration-test-lead-form.mjs --base <url>`
 - `node scripts/integration-test-kpi-dashboard.mjs --base <url> --admin-user <user> --admin-password <pass>`
 - `php scripts/unit-test-services.php`

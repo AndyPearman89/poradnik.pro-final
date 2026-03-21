@@ -8,7 +8,6 @@ Master tasklist: docs/implementation/final-project-tasklist.md
 - DONE: TASK-G01 uruchomic nightly pipeline (smoke + unit + integration + load + raport).
 - DONE: TASK-G03 dopisac release runbook: preflight, deploy, rollback, post-deploy checks.
 - BLOCKED: TASK-G04 wymaga ustawien branch protection i required checks bezposrednio w GitHub repo settings.
-- OPEN: TASK-G05 przygotowac checklist incydentowa dla awarii /track i lead submit.
 - DONE: TASK-G05 przygotowac checklist incydentowa dla awarii /track i lead submit.
 - DONE: TASK-A01 wdrozyc idempotent bootstrap WP dla CI i local.
-- OPEN: TASK-A05 dodac twardy gate runtime errors w FE smoke.
+- DONE: TASK-A05 dodac twardy gate runtime errors w FE smoke.

@@ -15,7 +15,7 @@
 - [BLOCKED] TASK-G04 - branch protection i required checks dla main
 - [DONE] TASK-G05 - checklist incydentowa /track i lead submit
 - [DONE] TASK-A01 - idempotent bootstrap WP (CI + local)
-- [OPEN] TASK-A05 - hard gate runtime errors w FE smoke
+- [DONE] TASK-A05 - hard gate runtime errors w FE smoke
 
 ## Priorytet P1 (jakosc danych i konwersja)
 
@@ -59,6 +59,6 @@
 
 - 1) TASK-G03
 - 2) TASK-G05
-- 3) TASK-A05
-- 4) TASK-B02
-- 5) TASK-B03
+- 3) TASK-B02
+- 4) TASK-B03
+- 5) TASK-B04

@@ -15,11 +15,18 @@ Szybka walidacja, że motyw FE jest uruchomiony i poprawnie integruje się z tra
 3. Waliduje obecność oczekiwanych markerów HTML (poradnik, wp-json)
 4. PostPayloaduje test event do `/wp-json/peartree/v1/track`
 5. Waliduje kod odpowiedzi 200 i pole `success` w JSON
+6. W trybie `--strict-runtime` failuje na markerach runtime error (Fatal/Parse/Warning/Notice/Deprecated) w homepage i odpowiedzi `/track`
 
 ## Uruchomienie
 
 ```bash
 node scripts/smoke-test-fe.mjs --base http://localhost:8080
+```
+
+Tryb twardej bramki runtime (zalecany w CI):
+
+```bash
+node scripts/smoke-test-fe.mjs --base http://localhost:8080 --strict-runtime
 ```
 
 ## Wykorzystanie w CI
@@ -31,6 +38,8 @@ Test uruchamiany jest w workflow po aktywacji motywu i przed load testem, aby up
 - tracking endpoint jest dostępny
 
 Jeśli test się nie powiedzie, workflow zatrzymuje się i nie uruchamia load testu.
+
+W CI używany jest tryb `--strict-runtime`, więc każde wykrycie markerów błędu runtime zatrzymuje pipeline.
 
 ## Przykładowy output
 

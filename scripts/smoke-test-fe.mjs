@@ -14,6 +14,7 @@
 
 const defaults = {
   base: 'http://localhost:8080',
+  strictRuntime: false,
 };
 
 function parseArgs(argv) {
@@ -24,12 +25,40 @@ function parseArgs(argv) {
     if (key === '--base' && val) {
       out.base = val;
       i++;
+      continue;
+    }
+    if (key === '--strict-runtime') {
+      out.strictRuntime = true;
     }
   }
   return out;
 }
 
-async function testHomePage(base) {
+const runtimeErrorPatterns = [
+  /fatal error/i,
+  /parse error/i,
+  /uncaught\s+error/i,
+  /there has been a critical error on this website/i,
+  /\bwarning\b\s*:/i,
+  /\bnotice\b\s*:/i,
+  /\bdeprecated\b\s*:/i,
+  /call to undefined function/i,
+  /stack trace/i,
+];
+
+function assertNoRuntimeErrorMarkers(body, contextLabel) {
+  const matches = runtimeErrorPatterns
+    .filter((pattern) => pattern.test(body))
+    .map((pattern) => pattern.toString());
+
+  if (matches.length > 0) {
+    throw new Error(
+      `${contextLabel} contains runtime error markers: ${matches.join(', ')}`
+    );
+  }
+}
+
+async function testHomePage(base, strictRuntime) {
   const url = `${base.replace(/\/$/, '')}/`;
   const res = await fetch(url);
 
@@ -38,6 +67,9 @@ async function testHomePage(base) {
   }
 
   const html = await res.text();
+  if (strictRuntime) {
+    assertNoRuntimeErrorMarkers(html, 'Home page HTML');
+  }
 
   // Check for WordPress markers indicating WP is running
   const expectedMarkers = [
@@ -52,9 +84,12 @@ async function testHomePage(base) {
 
   console.log('✓ Home page loads successfully (status 200)');
   console.log('✓ WordPress markers present');
+  if (strictRuntime) {
+    console.log('✓ Runtime error markers not found on home page');
+  }
 }
 
-async function testTrackingEndpoint(base) {
+async function testTrackingEndpoint(base, strictRuntime) {
   const url = `${base.replace(/\/$/, '')}/wp-json/peartree/v1/track`;
 
   const payload = {
@@ -65,53 +100,69 @@ async function testTrackingEndpoint(base) {
     },
   };
 
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!strictRuntime && res.status === 404) {
+    console.log('✓ Tracking endpoint path is accessible (404 expected if theme inactive)');
+    return;
+  }
+
+  if (res.status !== 200) {
+    const rawBody = await res.text();
+    if (strictRuntime) {
+      assertNoRuntimeErrorMarkers(rawBody, 'Tracking endpoint response');
+      throw new Error(`Tracking endpoint returned ${res.status}, expected 200 in strict runtime mode`);
+    }
+    throw new Error(`Tracking endpoint returned ${res.status}, expected 200 or 404`);
+  }
+
+  const rawBody = await res.text();
+  if (strictRuntime) {
+    assertNoRuntimeErrorMarkers(rawBody, 'Tracking endpoint response');
+  }
+
+  let json;
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (res.status === 404) {
-      console.log('✓ Tracking endpoint path is accessible (404 expected if theme inactive)');
-      return;
-    }
-
-    if (res.status !== 200) {
-      throw new Error(`Tracking endpoint returned ${res.status}, expected 200 or 404`);
-    }
-
-    const json = await res.json();
-    if (!json.success) {
-      throw new Error(`Tracking endpoint did not confirm success in response`);
-    }
-
-    console.log('✓ Tracking endpoint accepts POST events (status 200)');
-    console.log('✓ Tracking response confirmed success');
+    json = JSON.parse(rawBody);
   } catch (error) {
-    // If we can't POST to the endpoint at all, that's OK for dev env (theme might not be active)
-    if (error.message.includes('not valid JSON')) {
+    if (!strictRuntime) {
       console.log('✓ Tracking endpoint path is accessible (response parsing skipped in dev)');
       return;
     }
-    throw error;
+    throw new Error('Tracking endpoint returned non-JSON response in strict runtime mode');
+  }
+
+  if (!json.success) {
+    throw new Error('Tracking endpoint did not confirm success in response');
+  }
+
+  console.log('✓ Tracking endpoint accepts POST events (status 200)');
+  console.log('✓ Tracking response confirmed success');
+  if (strictRuntime) {
+    console.log('✓ Runtime error markers not found in tracking response');
   }
 }
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const base = args.base;
+  const strictRuntime = args.strictRuntime;
 
   console.log('Frontend smoke test');
   console.log(`base: ${base}`);
+  console.log(`strictRuntime: ${strictRuntime ? 'on' : 'off'}`);
   console.log('');
 
   try {
-    await testHomePage(base);
+    await testHomePage(base, strictRuntime);
     console.log('');
-    await testTrackingEndpoint(base);
+    await testTrackingEndpoint(base, strictRuntime);
     console.log('');
     console.log('Overall: PASS');
   } catch (error) {

@@ -51,7 +51,8 @@
 - 2026-03-21: TASK-G04 oznaczono jako BLOCKED (wymaga recznej konfiguracji GitHub branch protection poza repo code).
 - 2026-03-21: Zrealizowano TASK-G05: dodano checkliste incydentowa dla awarii /track i lead submit w docs/implementation/incident-response-checklist.md.
 - 2026-03-21: Zrealizowano TASK-A01: dodano idempotentny skrypt bootstrap WP (scripts/bootstrap-wp.sh) i podlaczono go w CI oraz dokumentacji local.
-- Kolejny krok: zrealizowac TASK-A05 (twardy gate runtime errors w FE smoke).
+- 2026-03-21: Zrealizowano TASK-A05: smoke test FE uruchamiany w CI w trybie --strict-runtime, failuje na markerach runtime error w homepage i /track response.
+- Kolejny krok: zrealizowac TASK-B02 (test kontraktu export CSV dla 365 dni).
 
 ## Etap 1: Foundation (MVP techniczne)
 
