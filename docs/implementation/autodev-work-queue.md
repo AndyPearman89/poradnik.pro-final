@@ -18,4 +18,5 @@ Master tasklist: docs/implementation/final-project-tasklist.md
 - DONE: TASK-C01 uruchomic E2E lead flow end-to-end.
 - DONE: TASK-C02 dodac retry/backoff scenariusze API lead.
 - DONE: TASK-C03 zrealizowac routing multi/exclusive + testy kontraktu.
-- OPEN: TASK-C04 dodac antyspam honeypot + throttle integration tests.
+- DONE: TASK-C04 dodac antyspam honeypot + throttle integration tests.
+- OPEN: TASK-C05 zrealizowac monitoring SLA partnerow + alerting.

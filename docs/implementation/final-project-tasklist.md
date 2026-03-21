@@ -26,7 +26,7 @@
 - [DONE] TASK-C01 - E2E lead flow end-to-end
 - [DONE] TASK-C02 - retry/backoff scenariusze API lead
 - [DONE] TASK-C03 - routing multi/exclusive + testy kontraktu
-- [OPEN] TASK-C04 - antyspam honeypot + throttle integration tests
+- [DONE] TASK-C04 - antyspam honeypot + throttle integration tests
 - [OPEN] TASK-C05 - monitoring SLA partnerow + alerting
 
 ## Priorytet P2 (SEO, UX, monetyzacja)
