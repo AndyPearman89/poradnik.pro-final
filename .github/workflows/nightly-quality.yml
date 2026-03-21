@@ -1,0 +1,123 @@
+name: Nightly Quality Pipeline
+
+on:
+  schedule:
+    - cron: '15 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  nightly-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Prepare env
+        run: cp .env.example .env
+
+      - name: Start WordPress stack
+        run: docker compose up -d
+
+      - name: Wait for WordPress container
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 30); do
+            if docker compose ps --format json | grep -q '"Service":"wordpress"'; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "WordPress container did not become ready in time"
+          exit 1
+
+      - name: Bootstrap WP core if needed
+        run: |
+          set -euo pipefail
+          docker compose --profile tools run --rm wpcli wp core is-installed --allow-root || \
+          docker compose --profile tools run --rm wpcli wp core install \
+            --url=http://localhost:8080 \
+            --title="Poradnik Pro Nightly" \
+            --admin_user=admin \
+            --admin_password=admin123! \
+            --admin_email=admin@example.com \
+            --skip-email \
+            --allow-root
+
+      - name: Activate theme
+        run: docker compose --profile tools run --rm wpcli wp theme activate poradnik.pro --allow-root
+
+      - name: Seed KPI store for dashboard tie-order E2E
+        run: |
+          set -euo pipefail
+          docker compose --profile tools run --rm wpcli wp eval '
+          $store = [
+            "2026-03-20" => [
+              "events" => ["cta_click" => 2],
+              "sources" => ["beta" => 1, "alpha" => 1],
+              "revenue" => [
+                "affiliate_clicks" => 0,
+                "lead_success" => 0,
+                "estimated_affiliate_revenue" => 0.0,
+                "estimated_lead_revenue" => 0.0,
+              ],
+            ],
+            "2026-03-21" => [
+              "events" => ["cta_click" => 2],
+              "sources" => ["alpha" => 1, "beta" => 1],
+              "revenue" => [
+                "affiliate_clicks" => 0,
+                "lead_success" => 0,
+                "estimated_affiliate_revenue" => 0.0,
+                "estimated_lead_revenue" => 0.0,
+              ],
+            ],
+          ];
+          update_option("poradnik_pro_kpi_store", $store, false);
+          echo "seeded";
+          ' --allow-root
+
+      - name: Run FE smoke test
+        run: node scripts/smoke-test-fe.mjs --base http://127.0.0.1:8080
+
+      - name: Run lead form integration test
+        run: node scripts/integration-test-lead-form.mjs --base http://127.0.0.1:8080
+
+      - name: Run KPI summary integration test
+        run: node scripts/integration-test-kpi-summary.mjs
+
+      - name: Run KPI dashboard E2E HTTP test
+        run: node scripts/integration-test-kpi-dashboard.mjs --base http://127.0.0.1:8080 --admin-user admin --admin-password "admin123!"
+
+      - name: Run service unit tests (PHP)
+        run: php scripts/unit-test-services.php
+
+      - name: Run local module API unit tests (PHP)
+        run: php scripts/unit-test-local-module-api.php
+
+      - name: Run load-test suite
+        run: node scripts/runnee.mjs --base http://127.0.0.1:8080
+
+      - name: Enforce baseline SLO gate
+        env:
+          TRACK_BASELINE_MAX_P95_MS: "2000"
+          TRACK_BASELINE_MAX_P99_MS: "5000"
+        run: node scripts/check-track-slo.mjs
+
+      - name: Upload nightly reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-quality-reports
+          path: docs/implementation/reports/track-load-report-*.md
+          if-no-files-found: ignore
+
+      - name: Shutdown stack
+        if: always()
+        run: docker compose down -v

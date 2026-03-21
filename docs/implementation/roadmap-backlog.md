@@ -46,7 +46,8 @@
 - 2026-03-21: Dodano test integracyjny kontraktu /track dla sortowania top_sources po tie na danych z wielu dni (ingestEvent + buildSummary) w scripts/unit-test-services.php.
 - 2026-03-21: Wdrozono tryb operacyjny "Senior Dev Agent + Human Controller": push kontrolowany (manualny), runbook nadzorczy i walidacja artefaktu scripts/integration-test-kpi-summary.mjs.
 - 2026-03-21: Zrealizowano TASK-B01: pelny E2E HTTP test dashboardu KPI dla tie-order top_sources (multiday), skrypt scripts/integration-test-kpi-dashboard.mjs + seed danych w CI.
-- Kolejny krok: zrealizowac TASK-G01 (nightly pipeline: smoke + unit + integration + load + raport).
+- 2026-03-21: Zrealizowano TASK-G01: dodano nightly pipeline (.github/workflows/nightly-quality.yml) z sekwencja smoke + unit + integration + load + raport.
+- Kolejny krok: zrealizowac TASK-G03 (release runbook: preflight, deploy, rollback, post-deploy checks).
 
 ## Etap 1: Foundation (MVP techniczne)
 
