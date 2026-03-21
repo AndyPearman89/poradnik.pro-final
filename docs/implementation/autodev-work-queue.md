@@ -14,4 +14,5 @@ Master tasklist: docs/implementation/final-project-tasklist.md
 - DONE: TASK-B02 dodac test kontraktu export CSV dla 365 dni.
 - DONE: TASK-B03 dodac walidacje schematu payload /track (allowlist).
 - DONE: TASK-B04 dodac regresje retention 14/365.
-- OPEN: TASK-B05 dodac metryke invalid payload count w KPI.
+- DONE: TASK-B05 dodac metryke invalid payload count w KPI.
+- OPEN: TASK-C01 uruchomic E2E lead flow end-to-end.

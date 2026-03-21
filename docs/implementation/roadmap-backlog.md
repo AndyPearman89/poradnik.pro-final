@@ -55,7 +55,8 @@
 - 2026-03-21: Zrealizowano TASK-B02: dodano test kontraktu pelnego eksportu CSV dla 365 dni (1 header + 365 rows, granice dat).
 - 2026-03-21: Zrealizowano TASK-B03: endpoint /track normalizuje eventName wg allowlist i filtruje payload do dozwolonych kluczy (schema allowlist).
 - 2026-03-21: Zrealizowano TASK-B04: dodano regresyjne testy granic retencji dla 14 i 365 dni (cutoff edge cases).
-- Kolejny krok: zrealizowac TASK-B05 (metryka invalid payload count w KPI).
+- 2026-03-21: Zrealizowano TASK-B05: dodano metryke invalid_payload_count w KPI (ingest + summary + testy kontraktu).
+- Kolejny krok: zrealizowac TASK-C01 (E2E lead flow end-to-end).
 
 ## Etap 1: Foundation (MVP techniczne)
 

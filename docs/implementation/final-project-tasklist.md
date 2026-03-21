@@ -22,7 +22,7 @@
 - [DONE] TASK-B02 - test kontraktu export CSV dla 365 dni
 - [DONE] TASK-B03 - walidacja schematu payload /track (allowlist)
 - [DONE] TASK-B04 - regresja retention 14/365
-- [OPEN] TASK-B05 - metryka invalid payload count w KPI
+- [DONE] TASK-B05 - metryka invalid payload count w KPI
 - [OPEN] TASK-C01 - E2E lead flow end-to-end
 - [OPEN] TASK-C02 - retry/backoff scenariusze API lead
 - [OPEN] TASK-C03 - routing multi/exclusive + testy kontraktu
@@ -59,6 +59,6 @@
 
 - 1) TASK-G03
 - 2) TASK-G05
-- 3) TASK-B05
-- 4) TASK-C01
-- 5) TASK-C02
+- 3) TASK-C01
+- 4) TASK-C02
+- 5) TASK-C03

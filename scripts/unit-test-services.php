@@ -471,6 +471,7 @@ function testAnalyticsServiceIngestEventHandlesInvalidPayload(): void
 
     assertSame(1, (int) ($store[$day]['events']['unknown'] ?? 0), 'ingestEvent should count unknown event');
     assertSame(1, (int) ($store[$day]['sources']['unknown'] ?? 0), 'ingestEvent should count unknown source');
+    assertSame(1, (int) ($store[$day]['quality']['invalid_payload_count'] ?? 0), 'ingestEvent should increment invalid payload count for unknown payload');
 
     echo "✓ AnalyticsService::ingestEvent invalid payload resilience\n";
 }
@@ -997,6 +998,9 @@ function testAnalyticsServiceBuildSummaryMultiDayAggregation(): void
                 'estimated_lead_revenue' => 60.0,
                 'estimated_affiliate_revenue' => 4.5,
             ],
+            'quality' => [
+                'invalid_payload_count' => 1,
+            ],
             'sources' => [
                 'organic' => 5,
                 'affiliate' => 2,
@@ -1009,6 +1013,9 @@ function testAnalyticsServiceBuildSummaryMultiDayAggregation(): void
                 'estimated_lead_revenue' => 30.0,
                 'estimated_affiliate_revenue' => 6.0,
             ],
+            'quality' => [
+                'invalid_payload_count' => 2,
+            ],
             'sources' => [
                 'affiliate' => 7,
                 'social' => 1,
@@ -1020,6 +1027,7 @@ function testAnalyticsServiceBuildSummaryMultiDayAggregation(): void
 
     assertSame(3, (int) ($summary['lead_success'] ?? 0), 'buildSummary should aggregate lead_success across multiple days');
     assertSame(7, (int) ($summary['affiliate_clicks'] ?? 0), 'buildSummary should aggregate affiliate_clicks across multiple days');
+    assertSame(3, (int) ($summary['invalid_payload_count'] ?? 0), 'buildSummary should aggregate invalid_payload_count across multiple days');
     assertSame(100.5, (float) ($summary['estimated_total_revenue'] ?? 0), 'buildSummary should sum lead and affiliate revenues across multiple days');
 
     $topSources = (array) ($summary['top_sources'] ?? []);
@@ -1045,6 +1053,7 @@ function testAnalyticsServiceBuildSummaryEmptyInputFallback(): void
 
     assertSame(0, (int) ($summary['lead_success'] ?? -1), 'buildSummary should return lead_success=0 for empty input');
     assertSame(0, (int) ($summary['affiliate_clicks'] ?? -1), 'buildSummary should return affiliate_clicks=0 for empty input');
+    assertSame(0, (int) ($summary['invalid_payload_count'] ?? -1), 'buildSummary should return invalid_payload_count=0 for empty input');
     assertSame(0.0, (float) ($summary['estimated_total_revenue'] ?? -1), 'buildSummary should return estimated_total_revenue=0.0 for empty input');
     assertSame([], (array) ($summary['top_sources'] ?? ['unexpected']), 'buildSummary should return empty top_sources for empty input');
 
@@ -1287,6 +1296,46 @@ function testAnalyticsServiceTrackEndpointTopSourcesTieMultiDayIntegration(): vo
     echo "✓ AnalyticsService::ingestEvent + buildSummary multi-day tie-order integration\n";
 }
 
+function testAnalyticsServiceTrackEndpointInvalidPayloadCountIntegration(): void
+{
+    global $mockOptions;
+
+    $mockOptions = [
+        'poradnik_pro_kpi_store' => [],
+        'poradnik_pro_kpi_config' => [
+            'affiliate_value_per_click' => 1.5,
+            'lead_value_per_success' => 25.0,
+            'retention_days' => 30,
+        ],
+    ];
+
+    AnalyticsService::ingestEvent(new WP_REST_Request([
+        'eventName' => 'cta_click',
+        'payload' => [
+            'source' => 'affiliate',
+        ],
+    ]));
+
+    AnalyticsService::ingestEvent(new WP_REST_Request([
+        'eventName' => 'not_allowed_event',
+        'payload' => [
+            'source' => 'unknown',
+        ],
+    ]));
+
+    $day = gmdate('Y-m-d');
+    $store = (array) ($mockOptions['poradnik_pro_kpi_store'] ?? []);
+    $rows = isset($store[$day]) ? [$day => $store[$day]] : [];
+
+    $summaryMethod = new ReflectionMethod(AnalyticsService::class, 'buildSummary');
+    $summaryMethod->setAccessible(true);
+    $summary = (array) $summaryMethod->invoke(null, $rows);
+
+    assertSame(1, (int) ($summary['invalid_payload_count'] ?? 0), 'invalid payload counter should increase for non-allowlisted event payload');
+
+    echo "✓ AnalyticsService::ingestEvent invalid payload KPI integration\n";
+}
+
 try {
     echo "Service unit tests\n\n";
     testPruneStoreRemovesOldDays();
@@ -1320,6 +1369,7 @@ try {
     testAnalyticsServiceBuildSummarySourceTypeNormalization();
     testAnalyticsServiceBuildSummaryTopSourcesTieDeterminism();
     testAnalyticsServiceTrackEndpointTopSourcesTieMultiDayIntegration();
+    testAnalyticsServiceTrackEndpointInvalidPayloadCountIntegration();
 
     echo "\nOverall: PASS\n";
     exit(0);

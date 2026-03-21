@@ -106,6 +106,9 @@ final class AnalyticsService
             $store[$day] = [
                 'events' => [],
                 'sources' => [],
+                'quality' => [
+                    'invalid_payload_count' => 0,
+                ],
                 'revenue' => [
                     'affiliate_clicks' => 0,
                     'lead_success' => 0,
@@ -126,6 +129,10 @@ final class AnalyticsService
         if ($eventName === 'lead_submit_success') {
             $store[$day]['revenue']['lead_success']++;
             $store[$day]['revenue']['estimated_lead_revenue'] += (float) $config['lead_value_per_success'];
+        }
+
+        if ($eventName === 'unknown' || $source === 'unknown') {
+            $store[$day]['quality']['invalid_payload_count'] = (int) ($store[$day]['quality']['invalid_payload_count'] ?? 0) + 1;
         }
 
         $store = self::pruneStore($store, (int) $config['retention_days']);
@@ -187,7 +194,8 @@ final class AnalyticsService
         echo '<h2>' . esc_html__('Podsumowanie 14 dni', 'poradnik-pro') . '</h2>';
         echo '<p>' . esc_html__('Lead success: ', 'poradnik-pro') . esc_html((string) $summary['lead_success']) . ' | ';
         echo esc_html__('Affiliate clicks: ', 'poradnik-pro') . esc_html((string) $summary['affiliate_clicks']) . ' | ';
-        echo esc_html__('Est. total revenue: ', 'poradnik-pro') . esc_html(number_format((float) $summary['estimated_total_revenue'], 2, '.', ' ')) . ' PLN</p>';
+        echo esc_html__('Est. total revenue: ', 'poradnik-pro') . esc_html(number_format((float) $summary['estimated_total_revenue'], 2, '.', ' ')) . ' PLN | ';
+        echo esc_html__('Invalid payload count: ', 'poradnik-pro') . esc_html((string) $summary['invalid_payload_count']) . '</p>';
 
         if ($rows === []) {
             echo '<p>' . esc_html__('Brak danych eventowych.', 'poradnik-pro') . '</p>';
@@ -391,6 +399,7 @@ final class AnalyticsService
     {
         $leadSuccess = 0;
         $affiliateClicks = 0;
+        $invalidPayloadCount = 0;
         $leadRevenue = 0.0;
         $affiliateRevenue = 0.0;
         $sourceTotals = [];
@@ -398,9 +407,11 @@ final class AnalyticsService
         foreach ($rows as $data) {
             $revenue = (array) ($data['revenue'] ?? []);
             $sources = (array) ($data['sources'] ?? []);
+            $quality = (array) ($data['quality'] ?? []);
 
             $leadSuccess += (int) ($revenue['lead_success'] ?? 0);
             $affiliateClicks += (int) ($revenue['affiliate_clicks'] ?? 0);
+            $invalidPayloadCount += (int) ($quality['invalid_payload_count'] ?? 0);
             $leadRevenue += (float) ($revenue['estimated_lead_revenue'] ?? 0);
             $affiliateRevenue += (float) ($revenue['estimated_affiliate_revenue'] ?? 0);
 
@@ -424,6 +435,7 @@ final class AnalyticsService
         return [
             'lead_success' => $leadSuccess,
             'affiliate_clicks' => $affiliateClicks,
+            'invalid_payload_count' => $invalidPayloadCount,
             'estimated_total_revenue' => $leadRevenue + $affiliateRevenue,
             'top_sources' => array_slice($sourceTotals, 0, 10, true),
         ];
