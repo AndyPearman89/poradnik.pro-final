@@ -32,6 +32,14 @@ def _run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
 
 def analyze(repo_path: Path) -> dict[str, Any]:
     todos: list[dict[str, Any]] = []
+    ignored_prefixes = (
+        "peartree-autodev/",
+        "memory/",
+    )
+    ignored_suffixes = (
+        ".json",
+        ".jsonl",
+    )
     grep_cmd = ["grep", "-RInE", "\\b(TODO|FIXME|XXX)\\b", ".", "--exclude-dir=.git"]
     proc = _run(grep_cmd, repo_path)
     if proc.returncode in (0, 1):
@@ -40,6 +48,11 @@ def analyze(repo_path: Path) -> dict[str, Any]:
             m = re.match(r"^(.*?):(\d+):(.*)$", raw)
             if not m:
                 continue
+            rel_file = m.group(1).lstrip("./")
+            if rel_file.startswith(ignored_prefixes):
+                continue
+            if rel_file.endswith(ignored_suffixes):
+                continue
             content = m.group(3).strip()
             upper = content.upper()
             if upper.startswith("NO TODO") or upper.startswith("NO FIXME"):
@@ -47,7 +60,7 @@ def analyze(repo_path: Path) -> dict[str, Any]:
 
             todos.append(
                 {
-                    "file": m.group(1).lstrip("./"),
+                    "file": rel_file,
                     "line": int(m.group(2)),
                     "content": content,
                 }

@@ -25,11 +25,15 @@ def _changed_files(repo_path: Path) -> list[str]:
     proc = _run(["git", "status", "--porcelain"], repo_path)
     files: list[str] = []
     for row in proc.stdout.splitlines():
-        row = row.strip()
-        if not row:
+        if not row.strip():
             continue
-        files.append(row[3:].strip())
+        # porcelain rows are "XY path" and may include leading spaces in XY.
+        files.append(row[3:])
     return files
+
+
+def _changed_files_set(repo_path: Path) -> set[str]:
+    return set(_changed_files(repo_path))
 
 
 def implement(repo_path: Path, task: Task, config: dict[str, Any], logs_path: Path) -> ImplementationResult:
@@ -37,6 +41,7 @@ def implement(repo_path: Path, task: Task, config: dict[str, Any], logs_path: Pa
     command = str(codegen_cfg.get("command") or "").strip()
 
     if command:
+        before = _changed_files_set(repo_path)
         env = os.environ.copy()
         env["AUTODEV_TASK_JSON"] = json.dumps(task.as_dict(), ensure_ascii=True)
         proc = _run(["bash", "-lc", command], repo_path, env=env)
@@ -46,7 +51,9 @@ def implement(repo_path: Path, task: Task, config: dict[str, Any], logs_path: Pa
                 changed_files=[],
                 notes=f"Codegen command failed: {proc.stderr.strip() or proc.stdout.strip()}",
             )
-        return ImplementationResult(ok=True, changed_files=_changed_files(repo_path), notes="External codegen command completed.")
+        after = _changed_files_set(repo_path)
+        changed = sorted(after - before)
+        return ImplementationResult(ok=True, changed_files=changed, notes="External codegen command completed.")
 
     # Safe deterministic fallback: no repository writes without explicit codegen command.
     logs_path.mkdir(parents=True, exist_ok=True)
