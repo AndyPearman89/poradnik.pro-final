@@ -47,7 +47,8 @@
 - 2026-03-21: Wdrozono tryb operacyjny "Senior Dev Agent + Human Controller": push kontrolowany (manualny), runbook nadzorczy i walidacja artefaktu scripts/integration-test-kpi-summary.mjs.
 - 2026-03-21: Zrealizowano TASK-B01: pelny E2E HTTP test dashboardu KPI dla tie-order top_sources (multiday), skrypt scripts/integration-test-kpi-dashboard.mjs + seed danych w CI.
 - 2026-03-21: Zrealizowano TASK-G01: dodano nightly pipeline (.github/workflows/nightly-quality.yml) z sekwencja smoke + unit + integration + load + raport.
-- Kolejny krok: zrealizowac TASK-G03 (release runbook: preflight, deploy, rollback, post-deploy checks).
+- 2026-03-21: Zrealizowano TASK-G03: dodano release runbook (preflight/deploy/rollback/post-deploy) w docs/implementation/release-runbook.md.
+- Kolejny krok: zrealizowac TASK-G04 (branch protection + required checks dla main).
 
 ## Etap 1: Foundation (MVP techniczne)
 

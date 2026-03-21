@@ -32,6 +32,7 @@ def _run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
 
 def analyze(repo_path: Path) -> dict[str, Any]:
     todos: list[dict[str, Any]] = []
+    tasklist_candidates: list[dict[str, Any]] = []
     ignored_prefixes = (
         "peartree-autodev/",
         "memory/",
@@ -69,14 +70,42 @@ def analyze(repo_path: Path) -> dict[str, Any]:
     status_proc = _run(["git", "status", "--porcelain"], repo_path)
     dirty = [line.strip() for line in status_proc.stdout.splitlines() if line.strip()]
 
+    tasklist_path = repo_path / "docs" / "implementation" / "final-project-tasklist.md"
+    if tasklist_path.exists():
+        pattern = re.compile(r"^- \[(OPEN|WIP)\] (TASK-[A-Z]\d{2}) - (.+)$")
+        for idx, raw in enumerate(tasklist_path.read_text(encoding="utf-8").splitlines(), start=1):
+            match = pattern.match(raw.strip())
+            if not match:
+                continue
+            tasklist_candidates.append(
+                {
+                    "file": "docs/implementation/final-project-tasklist.md",
+                    "line": idx,
+                    "status": match.group(1),
+                    "task_id": match.group(2),
+                    "content": match.group(3),
+                }
+            )
+
     return {
         "todo_candidates": todos,
+        "tasklist_candidates": tasklist_candidates,
         "dirty_files": dirty,
         "repo_root": str(repo_path),
     }
 
 
 def decide(analysis: dict[str, Any], context: dict[str, Any]) -> Task | None:
+    tasklist_candidates = analysis.get("tasklist_candidates", [])
+    for item in tasklist_candidates:
+        return Task(
+            kind="tasklist",
+            title="Execute tasklist item",
+            file=str(item.get("file") or ""),
+            line=int(item.get("line") or 0),
+            details=f"{item.get('task_id')}: {item.get('content')}",
+        )
+
     todos = analysis.get("todo_candidates", [])
     for item in todos:
         file_path = str(item.get("file", ""))
@@ -98,6 +127,8 @@ def decide(analysis: dict[str, Any], context: dict[str, Any]) -> Task | None:
 
 
 def make_commit_message(task: Task) -> str:
+    if task.kind == "tasklist" and task.details:
+        return f"autodev: execute {task.details.split(':', 1)[0]}"
     if task.kind == "todo" and task.file:
         return f"autodev: address TODO in {task.file}:{task.line}"
     if task.kind == "validation":
