@@ -36,3 +36,6 @@ Ten katalog zawiera skondensowaną dokumentację operacyjną i prompty wykonawcz
 
 11. `prompts/poradnik-pro-full-autonomous-system-builder.md`  
    Pelny prompt wykonawczy do autonomicznego budowania systemu Poradnik.pro (frontend, SEO, monetyzacja, automatyzacja).
+
+12. `implementation/progress-dashboard.md`  
+   Wizualizacja postepu realizacji (DONE/OPEN/BLOCKED), mapa etapow A-H i najblizszy execution lane.
