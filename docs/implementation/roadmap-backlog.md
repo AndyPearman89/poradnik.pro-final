@@ -44,6 +44,7 @@
 - 2026-03-20: Dodano test stabilności buildSummary dla niepoprawnych typów w sources (string/null/non-numeric/negative) i wdrozono bezpieczna normalizacje do int >= 0 w AnalyticsService::normalizeSourceCount.
 - 2026-03-20: Dodano test buildSummary dla scenariusza >10 sources z remisami count oraz wdrozono deterministyczne sortowanie tie-break po nazwie source (ASC).
 - 2026-03-21: Dodano test integracyjny kontraktu /track dla sortowania top_sources po tie na danych z wielu dni (ingestEvent + buildSummary) w scripts/unit-test-services.php.
+- 2026-03-21: Wdrozono tryb operacyjny "Senior Dev Agent + Human Controller": push kontrolowany (manualny), runbook nadzorczy i walidacja artefaktu scripts/integration-test-kpi-summary.mjs.
 - Kolejny krok: dodać test E2E (HTTP) w stacku Docker, który potwierdzi widoczność uporządkowanych top_sources w dashboardzie KPI dla danych wielodniowych.
 
 ## Etap 1: Foundation (MVP techniczne)
