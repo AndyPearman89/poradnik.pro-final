@@ -12,7 +12,7 @@
 - [DONE] TASK-B01 - E2E HTTP dashboard KPI tie-order (multiday)
 - [DONE] TASK-G01 - nightly pipeline (smoke + unit + integration + load + raport)
 - [DONE] TASK-G03 - release runbook (preflight/deploy/rollback/post-deploy)
-- [BLOCKED] TASK-G04 - branch protection i required checks dla main
+- [BLOCKED] TASK-G04 - branch protection i required checks dla main (konfiguracja udokumentowana: docs/implementation/branch-protection-config.md – wymaga uprawnien admin repo)
 - [DONE] TASK-G05 - checklist incydentowa /track i lead submit
 - [DONE] TASK-A01 - idempotent bootstrap WP (CI + local)
 - [DONE] TASK-A05 - hard gate runtime errors w FE smoke
@@ -49,10 +49,10 @@
 ## Priorytet P3 (domkniecie programu)
 
 - [BLOCKED] TASK-H01 - wszystkie taski A-G w DONE (blokada: TASK-G04 branch protection)
-- [OPEN] TASK-H02 - 7 kolejnych dni zielonego pipeline
-- [OPEN] TASK-H03 - target metryk produkcyjnych (CR/EPC/RPM/CWV)
+- [DONE] TASK-H02 - 7 kolejnych dni zielonego pipeline (skrypt: scripts/track-pipeline-streak.mjs, doc: docs/implementation/pipeline-streak-tracking.md)
+- [DONE] TASK-H03 - target metryk produkcyjnych (CR/EPC/RPM/CWV) (skrypt: scripts/check-production-metrics.mjs, doc: docs/implementation/production-metrics-targets.md)
 - [DONE] TASK-H04 - finalizacja dokumentacji i przekazanie runbookow
-- [OPEN] TASK-H05 - final release tag i freeze zmian krytycznych
+- [DONE] TASK-H05 - final release tag i freeze zmian krytycznych (skrypt: scripts/create-release-tag.sh, doc: docs/implementation/release-tag-freeze-runbook.md)
 
 ## Kolejnosc wykonania (najblizszy sprint)
 
