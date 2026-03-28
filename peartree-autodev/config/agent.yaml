@@ -1,11 +1,11 @@
 {
   "repo_path": "..",
-  "mode": "senior_dev_controlled",
+  "mode": "fully_autonomous",
   "loop_seconds": 120,
   "max_cycles": 0,
   "git_remote": "origin",
   "git_branch": "main",
-  "push": false,
+  "push": true,
   "validation": {
     "php_lint": true,
     "sanity_commands": [

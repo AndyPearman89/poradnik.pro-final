@@ -1,5 +1,13 @@
 # poradnik.pro-final
 
+## Quick Links
+
+- 📚 [Deployment Automation Guide](docs/implementation/deployment-automation.md) - Comprehensive deployment procedures
+- 🔄 [Drain Procedures](docs/implementation/drain-procedures.md) - Graceful shutdown and rollback
+- 🤖 [Autodev Supervision Runbook](docs/implementation/autodev-supervision-runbook.md) - Agent monitoring and control
+- 🚀 [Release Runbook](docs/implementation/release-runbook.md) - Release procedures
+- 📊 [Production Metrics Targets](docs/implementation/production-metrics-targets.md) - SLO and performance targets
+
 ## Local Dev Stack (Docker)
 
 Szybkie uruchomienie lokalnego WordPress + MySQL:
@@ -58,17 +66,55 @@ Autonomiczny agent developerski 24/7 znajduje sie w katalogu:
 
 - peartree-autodev/
 
-Uruchomienie lokalne (single cycle):
+### Tryb 1: Fully Autonomous (Auto-commit + Auto-push)
+
+**UWAGA:** Ten tryb automatycznie commituje i pushuje zmiany po przejsciu validation gate!
+
+**Config:** `peartree-autodev/config/agent.yaml`
+```json
+{
+  "mode": "fully_autonomous",
+  "push": true
+}
+```
+
+**Start agenta:**
+```bash
+# W kontenerze Docker (24/7 loop)
+docker compose -f peartree-autodev/docker-compose.yml up -d --build
+
+# Monitoring logow
+docker compose -f peartree-autodev/docker-compose.yml logs -f
+
+# Sprawdz cykle w JSONL
+tail -f peartree-autodev/logs/runner.log.jsonl
+```
+
+### Tryb 2: Senior Dev Controlled (Wymaga manual review)
+
+**Config:** `peartree-autodev/config/agent.yaml`
+```json
+{
+  "mode": "senior_dev_controlled",
+  "push": false
+}
+```
+
+Agent commituje lokalnie, ale nie pushuje bez human review.
+
+**Workflow:**
+1. Agent wykonuje cycle i commituje lokalnie
+2. Human sprawdza: `git log -1 --stat`
+3. Human uruchamia testy: `php scripts/unit-test-services.php`
+4. Human pushuje: `git push origin main`
+
+Szczegoly: `docs/implementation/autodev-supervision-runbook.md`
+
+### Uruchomienie lokalne (single cycle test):
 
 ```bash
 cd peartree-autodev
 python agent/runner.py
-```
-
-Uruchomienie kontenerowe (loop 24/7):
-
-```bash
-docker compose -f peartree-autodev/docker-compose.yml up -d --build
 ```
 
 ## PEARTREE AUTODEV HYBRID (Python + Copilot) v1.0
