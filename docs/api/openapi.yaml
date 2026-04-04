@@ -1,0 +1,307 @@
+openapi: 3.0.3
+info:
+  title: Poradnik.pro API
+  description: |
+    REST API for the Poradnik.pro WordPress theme.
+
+    **Core Features:**
+    - Event tracking and analytics
+    - Lead management
+    - Content search
+    - Local service pages
+
+    **Authentication:** Most endpoints are public. Admin endpoints require WordPress authentication with `manage_options` capability.
+  version: 1.0.0
+  contact:
+    name: Poradnik.pro Technical Team
+    url: https://github.com/AndyPearman89/poradnik.pro-final
+  license:
+    name: GPL v2 or later
+    url: https://www.gnu.org/licenses/gpl-2.0.html
+
+servers:
+  - url: http://localhost:8080/wp-json
+    description: Local development
+  - url: https://poradnik.pro/wp-json
+    description: Production
+
+tags:
+  - name: Analytics
+    description: Event tracking and KPI management
+  - name: Local Module
+    description: E2E testing module endpoints
+
+paths:
+  /peartree/v1/track:
+    post:
+      tags:
+        - Analytics
+      summary: Track user events
+      description: |
+        Ingest analytics events for tracking user behavior, conversions, and revenue attribution.
+
+        **Supported Event Types:**
+        - `attribution_landing` - User landing with UTM parameters
+        - `channel_deeplink_click` - Deep link click tracking
+        - `cta_click` - Call-to-action button click
+        - `lead_form_displayed` - Lead form shown to user
+        - `lead_form_submit_attempt` - User attempted to submit lead form
+        - `lead_submit_failure` - Lead submission failed
+        - `lead_submit_success` - Lead successfully submitted
+        - `scroll_depth` - User scrolled to specific depth
+        - `search_query` - User performed a search
+        - `smoke_test` - Automated test event
+
+        **Revenue Attribution:**
+        - Affiliate clicks: Tracked when `eventName=cta_click` and `payload.source=affiliate`
+        - Lead success: Tracked when `eventName=lead_submit_success`
+
+        **Data Retention:** Configurable via admin (14-365 days, default 90 days)
+
+        **Performance SLO:**
+        - p95 latency: ≤2000ms
+        - p99 latency: ≤5000ms
+      operationId: trackEvent
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackEventRequest'
+            examples:
+              affiliateClick:
+                summary: Affiliate CTA click
+                value:
+                  eventName: cta_click
+                  payload:
+                    source: affiliate
+                    page_type: ranking
+                    placement: top3
+                  path: /ranking/najlepsze-firmy-budowlane
+              leadSuccess:
+                summary: Lead submission success
+                value:
+                  eventName: lead_submit_success
+                  payload:
+                    source: lead_form
+                    provider: partner_a
+                    page_type: local
+                  path: /uslugi/budowa-domow/warszawa
+              searchQuery:
+                summary: Search query
+                value:
+                  eventName: search_query
+                  payload:
+                    query: budowa domu
+                    term: budowa
+                  path: /
+      responses:
+        '202':
+          description: Event accepted for processing
+          headers:
+            Cache-Control:
+              description: No-cache directive
+              schema:
+                type: string
+                example: no-store, must-revalidate, max-age=0
+            X-Content-Type-Options:
+              description: MIME type sniffing protection
+              schema:
+                type: string
+                example: nosniff
+            X-Frame-Options:
+              description: Clickjacking protection
+              schema:
+                type: string
+                example: DENY
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackEventResponse'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /peartree-local/v1/status:
+    get:
+      tags:
+        - Local Module
+      summary: Get module status
+      description: Returns the health status of the local E2E testing module
+      operationId: getModuleStatus
+      security: []
+      responses:
+        '200':
+          description: Module status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  module:
+                    type: string
+                    example: peartree-local-module
+                  version:
+                    type: string
+                    example: 1.0.0
+
+  /peartree-local/v1/echo:
+    post:
+      tags:
+        - Local Module
+      summary: Echo request payload
+      description: Returns the submitted payload for testing purposes
+      operationId: echoPayload
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Echoed payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  echo:
+                    type: object
+                    additionalProperties: true
+
+components:
+  schemas:
+    TrackEventRequest:
+      type: object
+      required:
+        - eventName
+      properties:
+        eventName:
+          type: string
+          description: Type of event being tracked
+          enum:
+            - attribution_landing
+            - channel_deeplink_click
+            - cta_click
+            - lead_form_displayed
+            - lead_form_submit_attempt
+            - lead_submit_failure
+            - lead_submit_success
+            - scroll_depth
+            - search_query
+            - smoke_test
+        payload:
+          type: object
+          description: Event-specific data (only allowlisted keys are stored)
+          properties:
+            source:
+              type: string
+              description: Traffic source or event source
+              example: affiliate
+            channel:
+              type: string
+              description: Marketing channel
+              example: organic
+            page_type:
+              type: string
+              description: Type of page where event occurred
+              example: ranking
+            intent:
+              type: string
+              description: User intent level
+              enum: [low, mid, high]
+            term:
+              type: string
+              description: Search term or keyword
+            query:
+              type: string
+              description: Full search query
+            location:
+              type: string
+              description: Geographic location
+            placement:
+              type: string
+              description: Placement location on page
+              example: top3
+            variant:
+              type: string
+              description: A/B test variant
+              example: A
+            experiment:
+              type: string
+              description: A/B test experiment name
+              example: cta_color_test
+            device:
+              type: string
+              description: Device type
+              example: mobile
+            action:
+              type: string
+              description: Specific action taken
+            result:
+              type: string
+              description: Result of action
+            provider:
+              type: string
+              description: Service provider identifier
+            ts:
+              type: integer
+              description: Timestamp (Unix epoch milliseconds)
+            path:
+              type: string
+              description: URL path where event occurred
+        path:
+          type: string
+          description: URL path (alternative to payload.path)
+          example: /ranking/najlepsze-firmy-budowlane
+
+    TrackEventResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        ok:
+          type: boolean
+          example: true
+        event:
+          type: string
+          description: Normalized event name that was stored
+          example: cta_click
+
+    ErrorResponse:
+      type: object:
+        properties:
+          code:
+            type: string
+            description: Error code
+          message:
+            type: string
+            description: Human-readable error message
+          data:
+            type: object
+            description: Additional error context
+            properties:
+              status:
+                type: integer
+                description: HTTP status code
+
+  securitySchemes:
+    WordPressCookie:
+      type: apiKey
+      in: cookie
+      name: wordpress_logged_in
+      description: WordPress authentication cookie (for admin endpoints only)
+
+security:
+  - {}
